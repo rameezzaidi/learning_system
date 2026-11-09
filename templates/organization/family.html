@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{% if child %}{{ child.first_name|default:child.username }}'s overview{% else %}My children{% endif %}{% endblock %}
+{% block content %}
+{% if not s %}
+<div class="card empty">No student is linked to your account yet. Please contact the school office.</div>
+{% else %}
+<div class="page-head">
+  <div class="who">{% avatar child %}<div><h1 style="margin:0">{{ child.display_name }}</h1>
+    <p class="muted" style="margin:0">{% if s.cls %}{{ s.cls }}{% else %}Not in a class yet{% endif %}{% if child.student_profile.campus %} · {{ child.student_profile.campus.name }}{% endif %}</p></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    {% if kids|length > 1 %}
+    <label class="muted" for="kidSwitch">Switch child</label>
+    <select id="kidSwitch" class="select" style="max-width:220px" onchange="location.href='{% url 'organization:family_home' %}'+this.value+'/'">
+      {% for k in kids %}<option value="{{ k.pk }}" {% if k.pk == child.pk %}selected{% endif %}>{{ k.display_name }}</option>{% endfor %}
+    </select>{% endif %}
+    <a class="btn ghost" href="{% url 'exams:child_results' child.pk %}">{% icon "clipboard" 18 %} Results</a>
+    <a class="btn ghost" href="{% url 'organization:student_profile' child.pk %}">{% icon "chart" 18 %} Full record</a>
+  </div>
+</div>
+
+{% if s.at_risk %}<div class="card" style="border-left:4px solid #f43f5e;margin-bottom:16px"><b>Needs attention.</b> The latest published result ({{ s.latest.exam.name }}) is {{ s.latest.pct }}%. See the suggestions below, or message a teacher.</div>{% endif %}
+
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:var(--primary)"><span class="kpi-ic">{% icon "chart" 22 %}</span><b>{% if s.latest %}{{ s.latest.pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Latest exam</span>
+    <small>{% if s.latest %}{{ s.latest.exam.name }} · grade {{ s.latest.grade }}{% if s.latest.rank %} · rank {{ s.latest.rank }}/{{ s.latest.n_ranked }}{% endif %}{% else %}No published result yet{% endif %}</small></div>
+  <div class="kpi" style="--h:{% if s.delta is not None and s.delta < 0 %}#f43f5e{% else %}#10b981{% endif %}"><span class="kpi-ic">{% icon "up" 22 %}</span><b>{% if s.delta is not None %}{% if s.delta > 0 %}+{% endif %}{{ s.delta }}{% else %}—{% endif %}</b><span class="kpi-l">Change since last exam</span><small>{% if s.avg is not None %}Average of all exams: {{ s.avg }}%{% endif %}</small></div>
+  <div class="kpi" style="--h:#8b5cf6"><span class="kpi-ic">{% icon "book" 22 %}</span><b>{% if s.lesson_pct is not None %}{{ s.lesson_pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Lessons completed</span><small>{{ s.lessons.0 }} of {{ s.lessons.1 }}{% if s.quiz_avg is not None %} · quiz avg {{ s.quiz_avg }}%{% endif %}</small></div>
+  <div class="kpi" style="--h:#f59e0b"><span class="kpi-ic">{% icon "bolt" 22 %}</span><b>{% if s.mastery is not None %}{{ s.mastery }}%{% else %}—{% endif %}</b><span class="kpi-l">Nuggets mastered</span><small>{{ s.nug_done }} of {{ s.nug_total }}{% if s.stat %} · {{ s.stat.streak }}-day streak{% endif %}</small></div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><div class="ch-head"><h2>Progress over exams</h2></div>{% if s.trend %}<div class="chart" data-chart='{{ s.trend }}'></div>{% else %}<div class="ch-empty">Appears after the first published result.</div>{% endif %}</div>
+  <div class="card"><div class="ch-head"><h2>Latest result by subject</h2></div>{% if s.subj_chart %}<div class="chart" data-chart='{{ s.subj_chart }}'></div>{% else %}<div class="ch-empty">No subject marks yet.</div>{% endif %}</div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  {% with fees=s.fees student=child %}{% include "fees/_card.html" %}{% endwith %}
+  {% with att=s.attendance student=child %}{% include "attendance/_card.html" %}{% endwith %}
+  <div class="card"><h3>{% icon "sparkles" 18 %} Learning profile</h3><p class="muted">Strengths, focus subjects and next steps.</p><a class="btn ghost sm" href="{% url 'insights:dna' child.pk %}">Open</a></div>
+  <div class="card"><h2>Where to help</h2>
+    {% if s.weak %}<p class="muted">Subjects that need support</p>
+      {% for w in s.weak %}<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><b>{{ w.subject }}</b><span class="badge off">{{ w.pct }}%</span></div>{% endfor %}
+    {% elif s.latest %}<p class="muted">No weak subject in the latest result.</p>{% else %}<p class="muted">Nothing to show yet.</p>{% endif %}
+    {% if s.strong %}<p class="muted" style="margin-top:12px">Strong subjects: {% for x in s.strong %}<b>{{ x.subject }}</b>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    <h3 style="margin-top:16px">Suggested home practice</h3>
+    <ul class="tips">{% for t in s.tips %}<li>{{ t }}</li>{% empty %}<li class="muted">Suggestions appear after the first published result.</li>{% endfor %}</ul>
+  </div>
+  <div class="card"><h2>Short lessons waiting</h2>
+    {% for n in s.nug_open %}<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>{{ n.nugget.title }}</b><br><small class="muted">{{ n.nugget.course.subject.name }} · {{ n.nugget.minutes }} min · {{ n.reason|default:"recommended" }}</small></div>
+    {% empty %}<p class="muted">Nothing pending. 🎉</p>{% endfor %}
+    <h3 style="margin-top:16px">Teachers</h3>
+    {% for t, ok in s.teachers %}<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span>{{ t.display_name }}</span>
+      {% if ok %}<a class="btn ghost sm" href="{% url 'chat:start' t.pk %}">{% icon "chat" 16 %} Message</a>{% endif %}</div>
+    {% empty %}<p class="muted">No teachers assigned yet.</p>{% endfor %}
+  </div>
+</div>
+<p class="muted" style="margin-top:12px"><small>Only published results and teacher-approved lessons are shown. Suggestions are guidance, not a judgement about your child.</small></p>
+{% endif %}
+{% endblock %}

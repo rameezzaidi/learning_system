@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Warning settings{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Early warning thresholds</h1><p class="muted">Your school decides what counts as a warning sign. Alert level: 1 sign = Watch, 2 = Medium, 3 or more = High.</p></div></div>
+<form method="post" class="card" style="max-width:640px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for f in form %}<div style="margin-bottom:12px"><label for="{{ f.id_for_label }}"><b>{{ f.label }}</b></label>{{ f }}<small class="muted">{{ f.help_text }}</small>{{ f.errors }}</div>{% endfor %}
+  <button class="btn">{% icon "check" 18 %} Save thresholds</button> <a class="btn ghost" href="{% url 'risk:index' %}">Back</a>
+</form>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Edit timetable · {{ cls }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Edit {{ cls }} timetable</h1><p class="muted">Pick the subject for each period. A teacher cannot be in two classes at the same time; the clash is blocked when you save.</p></div></div>
+{% if not g.rows %}<div class="card empty">Set up the <a href="{% url 'timetable:periods' %}">bell schedule</a> first.</div>
+{% elif not courses %}<div class="card empty">This class has no subjects yet. Add courses first.</div>
+{% else %}
+<form method="post" class="card table-wrap">{% csrf_token %}<table class="tt">
+  <thead><tr><th>Period</th>{% for d in g.days %}<th>{{ d.1 }}</th>{% endfor %}</tr></thead>
+  {% for row in g.rows %}<tr class="{% if row.period.is_break %}tt-break{% endif %}">
+    <th><b>{{ row.period.name }}</b><small>{{ row.period.start_time|time:"H:i" }}–{{ row.period.end_time|time:"H:i" }}</small></th>
+    {% if row.period.is_break %}<td colspan="{{ g.days|length }}" class="tt-breaktxt">Break</td>
+    {% else %}{% for d, sel in row.pairs %}<td><select class="select" name="c_{{ d.0 }}_{{ row.period.pk }}" aria-label="{{ d.1 }} {{ row.period.name }}"><option value="">—</option>
+      {% for c in courses %}<option value="{{ c.pk }}" {% if sel == c.pk %}selected{% endif %}>{{ c.subject.name }}{% if c.teacher %} ({{ c.teacher.first_name|default:c.teacher.username }}){% endif %}</option>{% endfor %}</select></td>{% endfor %}{% endif %}
+  </tr>{% endfor %}
+</table>
+<div style="margin-top:12px"><button class="btn">{% icon "check" 18 %} Save timetable</button> <a class="btn ghost" href="{% url 'timetable:class' cls.pk %}">Cancel</a></div></form>{% endif %}
+{% endblock %}

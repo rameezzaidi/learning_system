@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}New inquiry{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>New admission inquiry</h1></div></div>
+<form method="post" class="card" style="max-width:720px">{% csrf_token %}
+  <div class="grid g2"><label>Applicant name<input class="input" name="applicant_name" required maxlength="120"></label><label>Date of birth<input class="input" type="date" name="date_of_birth"></label>
+  <label>Guardian name<input class="input" name="guardian_name" required maxlength="120"></label><label>Guardian phone<input class="input" name="guardian_phone" maxlength="30"></label>
+  <label>Guardian email<input class="input" type="email" name="guardian_email"></label><label>Previous school<input class="input" name="previous_school" maxlength="160"></label>
+  <label>Applying for class<select class="select" name="applying_class"><option value="">—</option>{% for c in classes %}<option value="{{ c.pk }}">{{ c }}{% if c.campus %} · {{ c.campus.name }}{% endif %}</option>{% endfor %}</select></label>
+  <label>Campus<select class="select" name="campus"><option value="">—</option>{% for c in campuses %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label></div>
+  <label>Notes<textarea class="input" name="notes" rows="2"></textarea></label>
+  <button class="btn" style="margin-top:10px">Save inquiry</button> <a class="btn ghost" href="{% url 'sis:admissions' %}">Cancel</a></form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Documents · {{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Documents · {{ student.display_name }}</h1><p class="muted">PDF, JPG or PNG up to 5 MB. Only authorised staff can open them; every view is logged.</p></div><a class="btn ghost" href="{% url 'organization:student_profile' student.pk %}">Back to profile</a></div>
+<div class="grid g2"><div class="card table-wrap"><table><thead><tr><th>Type</th><th>File</th><th>Added</th><th></th></tr></thead>
+  {% for d in docs %}<tr><td>{{ d.get_kind_display }}</td><td><a href="{% url 'sis:document_file' d.pk %}" target="_blank" rel="noopener">{{ d.filename }}</a><small> {{ d.note }}</small></td><td>{{ d.uploaded_at|date:"d M Y" }}</td>
+    <td>{% if can_manage %}<form method="post" class="inline" onsubmit="return confirm('Delete this document?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ d.pk }}"><button class="btn ghost sm">Delete</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No documents yet.</td></tr>{% endfor %}</table></div>
+  {% if can_manage %}<form method="post" enctype="multipart/form-data" class="card">{% csrf_token %}<h3>Upload</h3>
+    <label>Type<select class="select" name="kind">{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
+    <label>File<input class="input" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required></label><label>Note<input class="input" name="note" maxlength="160"></label>
+    <button class="btn" style="margin-top:8px">Upload</button></form>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Result · {{ a.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ a.title }}</h1>
+  <p class="muted">{{ att.student.display_name }} · {{ a.course.subject }} · submitted {{ att.submitted_at|date:"d M Y, H:i" }}</p></div>
+  <a class="btn ghost" href="javascript:history.back()">Back</a></div>
+<div class="card score">
+  <div class="big">{{ att.score|floatformat:"-2" }} <small>/ {{ att.total|floatformat:"-2" }}</small></div>
+  <div><b>{{ att.percent }}%</b>{% if not att.needs_review %} · Grade <b>{{ grade }}</b>{% endif %}
+    {% if att.needs_review %}<br><span class="badge">Some written answers are still waiting for marking</span>{% endif %}</div>
+  <div class="bar" style="flex:1;min-width:140px"><i style="width:{{ att.percent }}%"></i></div>
+</div>
+{% for r in rows %}
+<div class="card qcard">
+  <div class="qhead"><span class="num">{{ forloop.counter }}</span><div class="grow">{{ r.q.text|linebreaksbr }}</div>
+    <small class="muted">{% if r.ans.points is not None %}{{ r.ans.points|floatformat:"-2" }}{% else %}—{% endif %} / {{ r.q.points|floatformat:"-2" }}</small></div>
+  {% if r.q.kind == "mcq" or r.q.kind == "tf" %}
+    {% for c in r.q.choices.all %}
+    <div class="ans {% if reveal and c.is_correct %}ok{% endif %} {% if r.ans.choice_id == c.pk and not c.is_correct %}bad{% endif %}">
+      {{ c.text }}{% if r.ans.choice_id == c.pk %} <small>(your answer)</small>{% endif %}{% if reveal and c.is_correct %} ✓{% endif %}</div>
+    {% endfor %}
+    {% if not r.ans.choice_id %}<small class="muted">Not answered</small>{% endif %}
+  {% else %}
+    <div class="ans">{{ r.ans.text|default:"Not answered"|linebreaksbr }}</div>
+    {% if reveal and r.q.kind == "short" %}<small class="muted">Accepted: {{ r.q.accepted }}</small>{% endif %}
+  {% endif %}
+  {% if r.ans.feedback %}<p class="fb"><b>Teacher:</b> {{ r.ans.feedback }}</p>{% endif %}
+  {% if reveal and r.q.explanation %}<p class="muted"><small>{{ r.q.explanation }}</small></p>{% endif %}
+</div>
+{% endfor %}
+{% include "partials/subject_ui.html" with name=a.course.subject.name %}
+{% endblock %}

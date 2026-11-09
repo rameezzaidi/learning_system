@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Transfer certificate{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Transfer certificate · {{ student.display_name }}</h1></div></div>
+<form method="post" class="card" style="max-width:560px">{% csrf_token %}
+  <label>Reason for leaving<input class="input" name="reason" maxlength="200"></label><label>Moving to (school)<input class="input" name="destination" maxlength="160"></label>
+  <label>Conduct<input class="input" name="conduct" value="Good" maxlength="60"></label>
+  <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" name="confirm"> I understand this deactivates the student's account.</label>
+  <button class="btn" style="margin-top:10px">Issue certificate</button> <a class="btn ghost" href="{% url 'organization:student_profile' student.pk %}">Cancel</a></form>
+{% endblock %}

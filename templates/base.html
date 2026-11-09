@@ -1,0 +1,175 @@
+{% load static ui %}<!doctype html>
+<html lang="en" {% include "partials/theme_attrs.html" %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Dashboard{% endblock %} · {{ school.school_name }}</title>
+  <meta name="theme-color" content="#2563eb">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/premium.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="scrim" id="scrim"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      {% include "partials/logo.html" %}
+      <div class="brand-text"><div class="brand-name">{{ school.school_name }}</div><div class="brand-sub">{{ school.tagline }}</div></div>
+    </div>
+
+    <nav class="nav" aria-label="Main">
+      <a href="{% url 'accounts:dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}">{% icon "home" %} Dashboard</a>
+
+      {% if user.is_super_admin %}
+        <div class="nav-label">Organization</div>
+        <a href="{% url 'organization:overview' %}" class="{% if page == 'org' %}active{% endif %}">{% icon "school" %} Regions &amp; Campuses</a>
+        <a href="{% url 'organization:student_list' %}" class="{% if page == 'students' %}active{% endif %}">{% icon "users" %} Students</a>
+        <a href="{% url 'organization:sync' %}" class="{% if page == 'sync' %}active{% endif %}">{% icon "power" %} Oracle Sync</a>
+        <a href="{% url 'reports:students' %}" class="{% if page == 'reports' %}active{% endif %}">{% icon "chart" %} Student Report</a>
+        <div class="nav-label">Administration</div>
+        <a href="{% url 'accounts:user_list' %}" class="{% if page == 'users' %}active{% endif %}">{% icon "users" %} Users &amp; Roles</a>
+        <a href="{% url 'core:settings' %}" class="{% if page == 'settings' %}active{% endif %}">{% icon "palette" %} Appearance</a>
+        <a href="{% url 'academics:class_list' %}" class="{% if page == 'classes' %}active{% endif %}">{% icon "school" %} Classes</a>
+        <a href="{% url 'academics:subject_list' %}" class="{% if page == 'subjects' %}active{% endif %}">{% icon "book" %} Subjects</a>
+        <a href="{% url 'assessments:list' %}" class="{% if page == 'assessments' %}active{% endif %}">{% icon "clipboard" %} Assessments</a>
+        <a href="{% url 'assessments:gradebook_index' %}" class="{% if page == 'gradebook' %}active{% endif %}">{% icon "chart" %} Gradebook</a>
+        <a href="{% url 'exams:list' %}" class="{% if page == 'exams' or page == 'gradescale' %}active{% endif %}">{% icon "clipboard" %} Examinations</a>
+        <a href="{% url 'nuggets:manage' %}" class="{% if page == 'nuggets' %}active{% endif %}">{% icon "bolt" %} Nuggets</a>
+        {% if perms_bank %}<a href="{% url 'bank:index' %}" class="{% if page == 'bank' %}active{% endif %}">{% icon "clipboard" %} Question Bank</a>
+        <a href="{% url 'insights:lesson_plan' %}" class="{% if page == 'lessonplan' %}active{% endif %}">{% icon "sparkles" %} Lesson Planner</a>{% endif %}
+        <a href="{% url 'academics:help_list' %}" class="{% if page == 'help' %}active{% endif %}">{% icon "help" %} Help desk {% if help_badge %}<span class="tag">{{ help_badge }}</span>{% endif %}</a>
+        <a href="{% url 'organization:compare' %}" class="{% if page == 'compare' %}active{% endif %}">{% icon "chart" %} Campus Comparison</a>
+        <a href="{% url 'curriculum:index' %}" class="{% if page == 'curriculum' %}active{% endif %}">{% icon "book" %} Curriculum</a>
+        <a href="{% url 'curriculum:handover_list' %}" class="{% if page == 'handovers' %}active{% endif %}">{% icon "users" %} Handovers</a>
+        <a href="{% url 'curriculum:monitor' %}" class="{% if page == 'coverage' %}active{% endif %}">{% icon "chart" %} Curriculum Coverage</a>
+        {% if perms_att_mark %}<a href="{% url 'attendance:index' %}" class="{% if page == 'attendance' %}active{% endif %}">{% icon "calendar" %} Attendance</a>{% endif %}
+        {% if perms_att_view %}<a href="{% url 'attendance:report' %}" class="{% if page == 'att_report' %}active{% endif %}">{% icon "chart" %} Attendance Report</a>{% endif %}
+        {% if perms_att_mark %}<a href="{% url 'attendance:staff' %}" class="{% if page == 'att_staff' %}active{% endif %}">{% icon "users" %} Teacher Attendance</a>{% endif %}
+        {% if perms_leave %}<a href="{% url 'attendance:leaves' %}" class="{% if page == 'leaves' %}active{% endif %}">{% icon "clipboard" %} Leave Requests</a>{% endif %}
+        {% if perms_risk %}<a href="{% url 'risk:index' %}" class="{% if page == 'risk' %}active{% endif %}">{% icon "bell" %} Early Warning {% if risk_badge %}<span class="tag">{{ risk_badge }}</span>{% endif %}</a>{% endif %}
+        <a href="{% url 'fees:dashboard' %}" class="{% if page == 'fees' %}active{% endif %}">{% icon "clipboard" %} Fees</a>
+        {% if perms_risk %}<a href="{% url 'risk:settings' %}" class="{% if page == 'risk_settings' %}active{% endif %}">{% icon "settings" %} Warning Settings</a>{% endif %}
+        <a href="{% url 'core:permissions' %}" class="{% if page == 'perms' %}active{% endif %}">{% icon "shield" %} Permissions</a>
+        <a href="{% url 'core:audit' %}" class="{% if page == 'audit' %}active{% endif %}">{% icon "key" %} Audit Log</a>
+      {% elif user.is_management %}
+        <div class="nav-label">Management</div>
+        <a href="{% url 'organization:compare' %}" class="{% if page == 'compare' %}active{% endif %}">{% icon "chart" %} Campus Comparison</a>
+        <a href="{% url 'organization:overview' %}" class="{% if page == 'org' %}active{% endif %}">{% icon "school" %} Campuses</a>
+        <a href="{% url 'organization:student_list' %}" class="{% if page == 'students' %}active{% endif %}">{% icon "users" %} Students</a>
+        <a href="{% url 'reports:students' %}" class="{% if page == 'reports' %}active{% endif %}">{% icon "chart" %} Student Report</a>
+        <a href="{% url 'curriculum:monitor' %}" class="{% if page == 'coverage' %}active{% endif %}">{% icon "chart" %} Curriculum Coverage</a>
+        <a href="{% url 'curriculum:handover_list' %}" class="{% if page == 'handovers' %}active{% endif %}">{% icon "users" %} Handovers</a>
+        {% if perms_att_mark %}<a href="{% url 'attendance:index' %}" class="{% if page == 'attendance' %}active{% endif %}">{% icon "calendar" %} Attendance</a>{% endif %}
+        {% if perms_att_view %}<a href="{% url 'attendance:report' %}" class="{% if page == 'att_report' %}active{% endif %}">{% icon "chart" %} Attendance Report</a>{% endif %}
+        {% if perms_att_mark %}<a href="{% url 'attendance:staff' %}" class="{% if page == 'att_staff' %}active{% endif %}">{% icon "users" %} Teacher Attendance</a>{% endif %}
+        {% if perms_leave %}<a href="{% url 'attendance:leaves' %}" class="{% if page == 'leaves' %}active{% endif %}">{% icon "clipboard" %} Leave Requests</a>{% endif %}
+        {% if perms_risk %}<a href="{% url 'risk:index' %}" class="{% if page == 'risk' %}active{% endif %}">{% icon "bell" %} Early Warning {% if risk_badge %}<span class="tag">{{ risk_badge }}</span>{% endif %}</a>{% endif %}
+        {% if perms_fees %}<a href="{% url 'fees:dashboard' %}" class="{% if page == 'fees' %}active{% endif %}">{% icon "clipboard" %} Fees</a>{% endif %}
+        {% if perms_audit %}<a href="{% url 'core:audit' %}" class="{% if page == 'audit' %}active{% endif %}">{% icon "key" %} Audit Log</a>{% endif %}
+      {% elif user.is_teacher %}
+        <div class="nav-label">Teaching</div>
+        <a href="{% url 'academics:my_courses' %}" class="{% if page == 'courses' %}active{% endif %}">{% icon "book" %} My Courses</a>
+        <a href="{% url 'assessments:list' %}" class="{% if page == 'assessments' %}active{% endif %}">{% icon "clipboard" %} Assessments</a>
+        <a href="{% url 'assessments:gradebook_index' %}" class="{% if page == 'gradebook' %}active{% endif %}">{% icon "chart" %} Gradebook</a>
+        <a href="{% url 'exams:list' %}" class="{% if page == 'exams' or page == 'gradescale' %}active{% endif %}">{% icon "clipboard" %} Examinations</a>
+        <a href="{% url 'curriculum:index' %}" class="{% if page == 'curriculum' %}active{% endif %}">{% icon "book" %} Curriculum</a>
+        <a href="{% url 'curriculum:handover_list' %}" class="{% if page == 'handovers' %}active{% endif %}">{% icon "users" %} Handovers</a>
+        {% if perms_att_mark %}<a href="{% url 'attendance:index' %}" class="{% if page == 'attendance' %}active{% endif %}">{% icon "calendar" %} Attendance</a>{% endif %}
+        {% if perms_att_view %}<a href="{% url 'attendance:report' %}" class="{% if page == 'att_report' %}active{% endif %}">{% icon "chart" %} Attendance Report</a>{% endif %}
+        {% if perms_att_mark %}<a href="{% url 'attendance:staff' %}" class="{% if page == 'att_staff' %}active{% endif %}">{% icon "users" %} Teacher Attendance</a>{% endif %}
+        {% if perms_leave %}<a href="{% url 'attendance:leaves' %}" class="{% if page == 'leaves' %}active{% endif %}">{% icon "clipboard" %} Leave Requests</a>{% endif %}
+        {% if perms_risk %}<a href="{% url 'risk:index' %}" class="{% if page == 'risk' %}active{% endif %}">{% icon "bell" %} Early Warning {% if risk_badge %}<span class="tag">{{ risk_badge }}</span>{% endif %}</a>{% endif %}
+        <a href="{% url 'nuggets:manage' %}" class="{% if page == 'nuggets' %}active{% endif %}">{% icon "bolt" %} Nuggets</a>
+        <a href="{% url 'academics:help_list' %}" class="{% if page == 'help' %}active{% endif %}">{% icon "help" %} Help desk {% if help_badge %}<span class="tag">{{ help_badge }}</span>{% endif %}</a>
+        <a class="soon">{% icon "sparkles" %} AI Assistant <span class="tag">Phase 4</span></a>
+      {% elif user.is_student %}
+        <div class="nav-label">Learning</div>
+        <a href="{% url 'academics:my_courses' %}" class="{% if page == 'courses' %}active{% endif %}">{% icon "book" %} My Courses</a>
+        <a href="{% url 'assessments:list' %}" class="{% if page == 'assessments' %}active{% endif %}">{% icon "clipboard" %} Assessments</a>
+        <a href="{% url 'assessments:progress' %}" class="{% if page == 'progress' %}active{% endif %}">{% icon "chart" %} My Progress</a>
+        <a href="{% url 'exams:my_results' %}" class="{% if page == 'results' %}active{% endif %}">{% icon "clipboard" %} My Results</a>
+        <a href="{% url 'attendance:my' %}" class="{% if page == 'attendance' %}active{% endif %}">{% icon "calendar" %} My Attendance</a>
+        <a href="{% url 'fees:my' %}" class="{% if page == 'fees' %}active{% endif %}">{% icon "clipboard" %} My Fees</a>
+        <a href="{% url 'nuggets:home' %}" class="{% if page == 'nuggets' %}active{% endif %}">{% icon "bolt" %} My Nuggets {% if nugget_badge %}<span class="tag">{{ nugget_badge }}</span>{% endif %}</a>
+        <a href="{% url 'academics:help_list' %}" class="{% if page == 'help' %}active{% endif %}">{% icon "help" %} Ask Teacher {% if help_badge %}<span class="tag">{{ help_badge }}</span>{% endif %}</a>
+        <a class="soon">{% icon "sparkles" %} AI Tutor <span class="tag">Phase 4</span></a>
+      {% else %}
+        <div class="nav-label">My Children</div>
+        {% for c in user.children.all %}
+        <a href="{% url 'organization:family' c.pk %}" class="{% if page == 'child' and active_child == c.pk %}active{% endif %}">{% icon "home" %} Overview · {{ c.first_name|default:c.username }}</a>
+        <a href="{% url 'academics:child_progress' c.pk %}">{% icon "book" %} Lessons · {{ c.first_name|default:c.username }}</a>
+        <a href="{% url 'organization:student_profile' c.pk %}">{% icon "chart" %} Profile · {{ c.first_name|default:c.username }}</a>
+        {% endfor %}
+        {% for c in user.children.all %}<a href="{% url 'exams:child_results' c.pk %}">{% icon "clipboard" %} Results · {{ c.first_name|default:c.username }}</a>
+        <a href="{% url 'fees:ledger' c.pk %}" class="{% if page == 'fees' and active_child == c.pk %}active{% endif %}">{% icon "clipboard" %} Fees · {{ c.first_name|default:c.username }}</a>{% endfor %}
+        {% for c in user.children.all %}<a href="{% url 'attendance:student' c.pk %}" class="{% if page == 'attendance' and active_child == c.pk %}active{% endif %}">{% icon "calendar" %} Attendance · {{ c.first_name|default:c.username }}</a>{% endfor %}
+      {% endif %}
+
+      {% if perms_bi or perms_transport %}<div class="nav-label">Operations</div>
+      {% if perms_bi %}<a href="{% url 'insights:executive' %}" class="{% if page == 'executive' %}active{% endif %}">{% icon "chart" %} Executive Dashboard</a>{% endif %}
+      {% if perms_transport %}<a href="{% url 'campusops:transport' %}" class="{% if page == 'transport' %}active{% endif %}">{% icon "home" %} Transport</a>{% endif %}{% endif %}
+
+      {% if perms_sis %}<div class="nav-label">Student records</div>
+      <a href="{% url 'sis:admissions' %}" class="{% if page == 'admissions' %}active{% endif %}">{% icon "users" %} Admissions</a>
+      {% if perms_sis_manage %}<a href="{% url 'sis:promotion' %}" class="{% if page == 'promotion' %}active{% endif %}">{% icon "chart" %} Class Promotion</a>{% endif %}{% endif %}
+
+      <div class="nav-label">Schedule</div>
+      {% if user.is_teacher %}<a href="{% url 'timetable:mine' %}" class="{% if page == 'timetable' %}active{% endif %}">{% icon "calendar" %} Timetable</a>
+      {% else %}<a href="{% url 'timetable:index' %}" class="{% if page == 'timetable' %}active{% endif %}">{% icon "calendar" %} Timetable</a>{% endif %}
+      <a href="{% url 'timetable:calendar' %}" class="{% if page == 'calendar' %}active{% endif %}">{% icon "calendar" %} Academic Calendar</a>
+      {% if perms_tt_manage %}<a href="{% url 'timetable:substitutions' %}" class="{% if page == 'tt_subs' %}active{% endif %}">{% icon "users" %} Substitutions</a>
+      <a href="{% url 'timetable:periods' %}" class="{% if page == 'tt_periods' %}active{% endif %}">{% icon "settings" %} Bell Schedule</a>{% endif %}
+
+      <div class="nav-label">Connect</div>
+      <a href="{% url 'campusops:library' %}" class="{% if page == 'library' %}active{% endif %}">{% icon "book" %} Library</a>
+      {% if user.is_student or user.is_parent %}<a href="{% url 'campusops:transport' %}" class="{% if page == 'transport' %}active{% endif %}">{% icon "home" %} Transport</a>{% endif %}
+      <a href="{% url 'chat:home' %}" class="{% if page == 'chat' %}active{% endif %}">{% icon "chat" %} Messages <span class="tag chat-badge" {% if not chat_unread %}hidden{% endif %}>{{ chat_unread }}</span></a>
+
+      <div class="nav-label">Account</div>
+      <a href="{% url 'accounts:profile' %}" class="{% if page == 'profile' %}active{% endif %}">{% icon "user" %} My Profile</a>
+      <a href="{% url 'accounts:security' %}" class="{% if page == 'security' %}active{% endif %}">{% icon "shield" %} Security</a>
+      {% if user.is_student %}<a href="{% url 'organization:student_profile' user.pk %}" class="{% if page == 'record' %}active{% endif %}">{% icon "chart" %} My Academic Record</a>{% endif %}
+    </nav>
+
+    <div class="side-foot">
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+        <button class="btn ghost block" style="color:inherit;border-color:rgba(255,255,255,.25)">{% icon "logout" 18 %} Sign out</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn ghost sm menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">{% icon "menu" 20 %}</button>
+      <div class="top-brand">{% include "partials/logo.html" %}<span>{{ school.school_name }}</span></div>
+      <div class="spacer"></div>
+      <details class="bell" id="bell">
+        <summary aria-label="Notifications{% if bell_unread %} ({{ bell_unread }} unread){% endif %}">{% icon "bell" 20 %}{% if bell_unread %}<span class="bell-n">{{ bell_unread }}</span>{% endif %}</summary>
+        <div class="bell-pop">
+          <div class="bell-h"><b>Notifications</b>{% if bell_unread %}<form method="post" action="{% url 'core_notifications_read' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="linkbtn">Mark all read</button></form>{% endif %}</div>
+          {% for n in bell_items %}<a class="nt-item {% if not n.is_read %}unread{% endif %}" href="{% url 'core_notification_open' n.pk %}"><span class="nt-dot"></span><div class="grow"><b>{{ n.title }}</b>{% if n.body %}<small>{{ n.body|truncatechars:70 }}</small>{% endif %}</div></a>
+          {% empty %}<p class="muted" style="padding:16px;margin:0;text-align:center">You are all caught up.</p>{% endfor %}
+          <a class="bell-f" href="{% url 'core_notifications' %}">See all</a>
+        </div>
+      </details>
+      <div class="who">
+        <a href="{% url 'accounts:profile' %}" class="who-av">{% avatar user %}</a>
+        <div class="meta"><b>{{ user.display_name }}</b><small>{{ user.get_role_display }}</small></div>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1" class="content page-{{ page|default:"x" }}">
+      {% if messages %}<div class="msgs">{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{% static 'js/charts.js' %}"></script>
+<script src="{% static 'js/app.js' %}"></script>
+</body>
+</html>

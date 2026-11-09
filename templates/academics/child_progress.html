@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div class="who"><div class="avatar">{{ student|initials }}</div>
+  <div><h1 style="margin:0">{{ student.display_name }}</h1><p class="muted" style="margin:0">{% if cls %}{{ cls }}{% else %}Not in a class yet{% endif %}</p></div></div>
+  <a class="btn ghost" href="{% url 'accounts:dashboard' %}">Back</a></div>
+
+<div class="card score"><div class="big">{% if overall is None %}—{% else %}{{ overall }}%{% endif %}</div><div>Overall assessment average</div></div>
+<p><a class="btn ghost" href="{% url 'exams:child_results' student.pk %}">{% icon "clipboard" 16 %} Exam results &amp; report cards</a></p>
+{% if summary %}<h2>Assessment results</h2>{% include "assessments/_summary.html" %}<h2>Lesson progress</h2>{% endif %}
+{% for r in rows %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+    <div><h2 style="margin:0">{{ r.course.subject }}</h2><small class="muted">{{ r.course.teacher.display_name|default:"Teacher not assigned" }}</small></div>
+    <div style="min-width:200px"><div class="bar"><i style="width:{{ r.pct }}%"></i></div><small class="muted">{{ r.done }} of {{ r.total }} lessons · {{ r.pct }}%</small></div>
+  </div>
+  {% for l in r.lessons %}
+  <div class="lesson-row {% if l.done %}done{% endif %}"><span class="num">{% if l.done %}{% icon "check" 16 %}{% else %}{{ forloop.counter }}{% endif %}</span>
+    <div class="grow">{{ l.lesson.title }}</div><small class="muted">{% if l.done %}Completed{% else %}Pending{% endif %}</small></div>
+  {% endfor %}
+</div>
+{% empty %}<div class="card empty">No subjects found for this student's class yet.</div>{% endfor %}
+{% endblock %}

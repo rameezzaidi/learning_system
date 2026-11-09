@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Curriculum{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Curriculum</h1><p class="muted">Outline of every course (Unit › Chapter › Topic › Learning outcome) and how much has been taught.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn ghost" href="{% url 'curriculum:handover_list' %}">{% icon "users" 18 %} Handovers</a>
+  {% if perms_monitor %}<a class="btn" href="{% url 'curriculum:monitor' %}">{% icon "chart" 18 %} Coverage monitor</a>{% endif %}</div></div>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Course</th><th>Teacher</th><th>Topics</th><th style="min-width:180px">Coverage</th><th>Last covered</th></tr></thead>
+  {% for r in rows %}
+  <tr><td><a href="{% url 'curriculum:outline' r.course.pk %}"><b>{{ r.course.subject }}</b></a><br><small class="muted">{{ r.course.school_class }}{% if r.course.school_class.campus %} · {{ r.course.school_class.campus.name }}{% endif %}</small></td>
+    <td>{{ r.course.teacher.display_name|default:"—" }}</td><td>{{ r.cov.done }} / {{ r.cov.total }}</td>
+    <td>{% if r.cov.pct is not None %}<div class="bar"><i style="width:{{ r.cov.pct }}%"></i></div><small>{{ r.cov.pct }}%</small>{% else %}<span class="muted">No outline yet</span>{% endif %}</td>
+    <td>{% if r.cov.last_on %}{{ r.cov.last_on|date:"d M" }} · {{ r.cov.last_title|truncatechars:30 }}{% else %}—{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">No courses yet.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

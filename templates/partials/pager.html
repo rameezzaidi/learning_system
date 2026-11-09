@@ -1,0 +1,9 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="pager-n" aria-label="Pagination">
+  <a class="pg {% if not page_obj.has_previous %}off{% endif %}" href="?{{ qs_page }}&page=1">&laquo;</a>
+  <a class="pg {% if not page_obj.has_previous %}off{% endif %}" href="?{{ qs_page }}&page={{ prev_n }}">&lsaquo; Prev</a>
+  {% for n in links %}{% if n %}<a class="pg {% if n == page_obj.number %}on{% endif %}" href="?{{ qs_page }}&page={{ n }}">{{ n }}</a>{% else %}<span class="pg gap">&hellip;</span>{% endif %}{% endfor %}
+  <a class="pg {% if not page_obj.has_next %}off{% endif %}" href="?{{ qs_page }}&page={{ next_n }}">Next &rsaquo;</a>
+  <a class="pg {% if not page_obj.has_next %}off{% endif %}" href="?{{ qs_page }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+</nav>
+{% else %}<span></span>{% endif %}

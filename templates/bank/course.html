@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Bank · {{ c }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ c }} · question bank</h1><p class="muted">{{ total }} question{{ total|pluralize }}.</p></div><a class="btn ghost" href="{% url 'bank:index' %}">All courses</a></div>
+<div class="grid g2">
+  <div>
+    <form class="toolbar" method="get"><input class="input" style="max-width:180px" name="q" value="{{ q }}" placeholder="Search"><select class="select" style="max-width:160px" name="topic"><option value="">All topics</option>{% for t in topics %}<option {% if t == topic %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+      <select class="select" style="max-width:130px" name="difficulty"><option value="">Any level</option><option value="1" {% if diff == "1" %}selected{% endif %}>Easy</option><option value="2" {% if diff == "2" %}selected{% endif %}>Medium</option><option value="3" {% if diff == "3" %}selected{% endif %}>Hard</option></select><button class="btn ghost">Filter</button></form>
+    <div class="card table-wrap"><table><thead><tr><th>Question</th><th>Topic</th><th>Level</th><th></th></tr></thead>
+      {% for x in qs %}<tr><td>{{ x.text|truncatechars:90 }}<br><small>{{ x.get_kind_display }}{% for ch in x.choices.all %}{% if ch.is_correct %} · answer: {{ ch.text|truncatechars:30 }}{% endif %}{% endfor %}{% if x.accepted %} · answer: {{ x.accepted|truncatechars:30 }}{% endif %}</small></td><td>{{ x.topic|default:"—" }}</td><td>{{ x.get_difficulty_display }}</td>
+        <td><form method="post" class="inline" onsubmit="return confirm('Remove this question?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ x.pk }}"><button class="btn ghost sm">Delete</button></form></td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No questions match.</td></tr>{% endfor %}</table></div>
+  </div>
+  <div>
+    <form method="post" class="card">{% csrf_token %}<h3>Generate a paper</h3><input type="hidden" name="action" value="generate">
+      <label>Title<input class="input" name="title" maxlength="200" required></label>
+      <div class="grid g2"><label>Easy<input class="input" type="number" name="easy" min="0" max="100" value="0"></label><label>Medium<input class="input" type="number" name="medium" min="0" max="100" value="5"></label>
+        <label>Hard<input class="input" type="number" name="hard" min="0" max="100" value="0"></label><label>Time limit (min, 0 = none)<input class="input" type="number" name="duration" min="0" value="0"></label>
+        <label>Only topic<select class="select" name="topic"><option value="">Any</option>{% for t in topics %}<option>{{ t }}</option>{% endfor %}</select></label>
+        <label>Type<select class="select" name="kind"><option value="quiz">Quiz</option><option value="test">Test</option><option value="exam">Exam</option></select></label></div>
+      <button class="btn" style="margin-top:8px">{% icon "bolt" 18 %} Generate draft</button></form>
+    <form method="post" class="card" style="margin-top:16px">{% csrf_token %}<h3>Add a question</h3><input type="hidden" name="action" value="add">
+      <label>Question<textarea class="input" name="text" rows="2" required></textarea></label>
+      <div class="grid g2"><label>Type<select class="select" name="kind" id="qk" onchange="document.getElementById('mcqbox').hidden=this.value!='mcq';document.getElementById('tfbox').hidden=this.value!='tf';document.getElementById('shbox').hidden=this.value!='short'"><option value="mcq">Multiple choice</option><option value="tf">True / False</option><option value="short">Short answer</option></select></label>
+        <label>Level<select class="select" name="difficulty"><option value="1">Easy</option><option value="2" selected>Medium</option><option value="3">Hard</option></select></label></div>
+      <label>Topic<input class="input" name="topic" maxlength="120" list="topiclist"></label><datalist id="topiclist">{% for t in topics %}<option value="{{ t }}">{% endfor %}</datalist>
+      <div id="mcqbox">{% for i in "0123" %}<label style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="radio" name="correct" value="{{ i }}" {% if i == "0" %}checked{% endif %} aria-label="Correct answer {{ forloop.counter }}"><input class="input" name="opt{{ i }}" placeholder="Option {{ forloop.counter }}" maxlength="300"></label>{% endfor %}<small class="muted">Select the radio next to the correct answer.</small></div>
+      <div id="tfbox" hidden><label>Correct answer<select class="select" name="tf"><option value="true">True</option><option value="false">False</option></select></label></div>
+      <div id="shbox" hidden><label>Accepted answers (separate with |)<input class="input" name="accepted" maxlength="500"></label></div>
+      <label>Explanation (optional)<input class="input" name="explanation"></label><button class="btn" style="margin-top:8px">{% icon "plus" 18 %} Add</button></form>
+    <form method="post" enctype="multipart/form-data" class="card" style="margin-top:16px">{% csrf_token %}<h3>Import from CSV</h3><input type="hidden" name="action" value="import">
+      <p class="muted"><small>Columns: topic, difficulty (easy/medium/hard), question, a, b, c, d, correct (A–D), explanation. UTF-8, up to 500 rows.</small></p>
+      <input class="input" type="file" name="file" accept=".csv" required><button class="btn ghost" style="margin-top:8px">Import</button></form>
+  </div>
+</div>
+{% endblock %}

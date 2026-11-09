@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Analysis{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class analysis · {{ exam.name }}</h1><p class="muted">{{ exam.school_class }} · {{ cins.n_complete }} of {{ cins.n_students }} students fully marked{% if prev_exam %} · compared with {{ prev_exam.name }}{% endif %}</p></div>
+  <div style="display:flex;gap:8px"><a class="btn ghost" href="{% url 'exams:sheet' exam.pk %}">Result sheet</a><a class="btn ghost" href="{% url 'exams:detail' exam.pk %}">Back</a></div></div>
+
+<div class="tiles-row" style="margin-bottom:16px">
+  <div class="tile-s"><small>Class average</small><b>{{ cins.avg_pct|default_if_none:"—" }}{% if cins.avg_pct is not None %}%{% endif %}</b>{% if cins.prev_avg is not None %}<em>was {{ cins.prev_avg }}%</em>{% endif %}</div>
+  <div class="tile-s {% if cins.pass_pct is not None and cins.pass_pct < 70 %}bad{% elif cins.pass_pct is not None %}good{% endif %}"><small>Pass rate</small><b>{{ cins.pass_pct|default_if_none:"—" }}{% if cins.pass_pct is not None %}%{% endif %}</b></div>
+  <div class="tile-s"><small>Best subject</small><b style="font-size:1.1rem">{{ cins.best_subject.subject|default:"—" }}</b></div>
+  <div class="tile-s {% if cins.at_risk %}bad{% endif %}"><small>Need attention</small><b>{{ cins.at_risk|length }}</b></div>
+</div>
+
+<div class="card guide">
+  <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+    <h2 style="margin:0">{% icon "sparkles" 20 %} Overall suggestions</h2>
+    <span class="badge {% if saved.source == 'ai' %}student{% endif %}">{% if saved.source == 'ai' %}AI · {{ saved.model_name }}{% else %}Auto guidance{% endif %}</span></div>
+  {% if saved.error %}<p class="muted"><small>{{ saved.error }}</small></p>{% endif %}
+  {% include "exams/_guide_class.html" with g=guidance lang="en" %}
+  {% if guidance_ur %}{% include "exams/_guide_class.html" with g=guidance_ur lang="ur" %}{% endif %}
+  <form method="post" action="{% url 'exams:ai' exam.pk %}" class="aibar" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Thinking…'">{% csrf_token %}
+    <button class="btn sm">{% icon "sparkles" 16 %} {% if saved %}Regenerate{% else %}Generate{% endif %} with AI</button>
+    <small class="muted">{% if ai_on %}Only anonymised numbers are sent to the AI.{% else %}AI not set up — showing automatic guidance. Add a free GEMINI_API_KEY or GROQ_API_KEY (or run Ollama) to enable AI.{% endif %}</small></form>
+</div>
+
+<div class="grid g2 charts" style="margin-bottom:20px">
+  <div class="card"><div class="ch-head"><h2>Average % by subject</h2></div><div class="chart" data-chart='{{ ch_avg }}'></div></div>
+  <div class="card"><div class="ch-head"><h2>Pass rate by subject</h2></div><div class="chart" data-chart='{{ ch_pass }}'></div></div>
+</div>
+
+<div class="grid g2" style="align-items:start">
+  <div class="card"><h3 style="margin-top:0">Subjects (weakest first)</h3>
+    {% for p in cins.subjects %}<div class="lesson-row"><div class="grow"><b>{{ p.subject }}</b>{% if p.teacher %}<small class="muted"> · {{ p.teacher }}</small>{% endif %}
+      <div class="cmp" style="margin-top:6px"><i class="{% if p.flags %}weak{% else %}strong{% endif %}" style="width:{{ p.avg_pct }}%"></i></div></div>
+      <div style="text-align:right"><b>{{ p.avg_pct }}%</b><br><small class="muted">pass {{ p.pass_rate }}%</small></div></div>
+    {% empty %}<p class="empty">No marks yet.</p>{% endfor %}</div>
+  <div class="card"><h3 style="margin-top:0">Students who need attention</h3>
+    {% for r in cins.at_risk %}<div class="lesson-row"><div class="grow"><a href="{% url 'exams:report_card' exam.pk r.student.pk %}"><b>{{ r.student.display_name }}</b></a> <small class="muted">{{ r.pct }}%</small><br>
+      <small class="muted">{{ r.why|join:" · " }}{% if r.weak %} · weak: {{ r.weak|join:", " }}{% endif %}</small></div></div>
+    {% empty %}<p class="empty">Nobody is at risk. 🎉</p>{% endfor %}
+    {% if cins.top %}<h3>Top performers</h3>{% for t in cins.top %}<div class="lesson-row"><div class="grow">{{ t.rank }}. <a href="{% url 'exams:report_card' exam.pk t.student.pk %}">{{ t.student.display_name }}</a></div><b>{{ t.pct }}%</b></div>{% endfor %}{% endif %}</div>
+</div>
+{% endblock %}

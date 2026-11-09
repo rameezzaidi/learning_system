@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Timetable · {{ cls }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ cls }} timetable</h1><p class="muted">{{ g.count }} lessons a week.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">{% if can_edit %}<a class="btn" href="{% url 'timetable:edit' cls.pk %}">{% icon "settings" 18 %} Edit timetable</a>{% endif %}<a class="btn ghost" href="{% url 'timetable:calendar' %}">Calendar</a></div></div>
+{% if cover %}<div class="card" style="margin-bottom:16px"><h3>Cover this week</h3><ul class="facts">{% for c in cover %}<li><span>{{ c.date|date:"D d M" }} · {{ c.slot.period.name }} · {{ c.slot.course.subject.name }}</span><b>{{ c.substitute.display_name }}</b></li>{% endfor %}</ul></div>{% endif %}
+{% include "timetable/_grid.html" %}
+{% endblock %}

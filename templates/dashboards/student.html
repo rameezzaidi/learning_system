@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load ui %}
+{% block content %}
+<section class="welcome">
+  <div class="w-text"><p class="w-date">{% now "l, j F Y" %}</p><h1>Hi {{ user.first_name|default:user.username }} 👋</h1><p class="w-sub">{% if cls %}{{ cls }} · {% endif %}Ready to learn something new today?</p></div>
+  {% if overall %}<div class="w-stat"><b>{{ overall }}%</b><span>{{ exam_name }} · Grade {{ grade }}</span></div>{% endif %}
+</section>
+
+{% if nug %}<div class="ng-strip"><div class="page-head"><div><h2 style="margin:0">{% icon "bolt" 20 %} Nuggets for you</h2><p class="muted" style="margin:2px 0 0">Sent automatically to help in your weak areas</p></div><a class="btn ghost sm" href="{% url 'nuggets:home' %}">See all</a></div>
+  <div class="ng-grid">{% for r in nug %}{% include "nuggets/_card.html" with r=r %}{% endfor %}</div></div>{% endif %}
+
+<h2>My courses</h2>
+<div class="grid g3">
+  {% for r in rows %}
+  <a class="card course-card k-{{ r.course.subject.name|subj_kind }}" href="{% url 'academics:course_detail' r.course.pk %}">
+    <h3>{{ r.course.subject }}</h3>
+    <p class="muted" style="margin:0 0 12px">{{ r.course.teacher.display_name|default:"Teacher not assigned" }}</p>
+    <div class="bar"><i style="width:{{ r.pct }}%"></i></div>
+    <small class="muted">{{ r.done }} of {{ r.total }} lessons · {{ r.pct }}%</small>
+  </a>
+  {% empty %}<div class="card empty" style="grid-column:1/-1">{% if cls %}No subjects in your class yet.{% else %}You are not in a class yet. Please contact the school office.{% endif %}</div>{% endfor %}
+</div>
+
+<div class="grid g2 charts" style="margin-top:20px">
+  <div class="card"><div class="ch-head"><h2>My marks</h2>{% if exam_name %}<span class="muted">{{ exam_name }}</span>{% endif %}</div>{% if ch_marks %}<div class="chart" data-chart='{{ ch_marks }}'></div>{% else %}<div class="ch-empty">Your exam marks will appear here once results are published.</div>{% endif %}</div>
+  <div class="card"><div class="ch-head"><h2>Lesson progress</h2></div>{% if ch_progress %}<div class="chart" data-chart='{{ ch_progress }}'></div>{% else %}<div class="ch-empty">No courses yet.</div>{% endif %}</div>
+</div>
+
+<div class="quick">
+  <a href="{% url 'academics:my_courses' %}">{% icon "book" 20 %}<span>My courses</span></a>
+  <a href="{% url 'assessments:list' %}">{% icon "clipboard" 20 %}<span>Assessments</span></a>
+  <a href="{% url 'exams:my_results' %}">{% icon "chart" 20 %}<span>My results</span></a>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <div class="ch-head"><h2>My parents / guardians</h2></div>
+  <ul class="people">
+    {% for g in guardians %}<li><span class="avatar">{{ g|initials }}</span><div class="grow"><b>{{ g.display_name }}</b><small>{{ g.email|default:"No email" }}</small></div></li>
+    {% empty %}<li class="muted">No parent linked yet. Ask your school admin.</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

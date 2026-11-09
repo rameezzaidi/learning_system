@@ -1,0 +1,35 @@
+{% load ui %}
+{% with e=lesson.url|embed %}
+{% if e %}
+<div class="video"><iframe id="yt" src="{{ e }}?enablejsapi=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>
+{% if user.is_student and not done %}
+<span id="yt-meta" data-done-url="{% url 'academics:item_done' lesson.pk %}" hidden>{% csrf_token %}</span>
+<script>
+(function () {
+  var meta = document.getElementById("yt-meta"), sent = false, player, timer;
+  function complete() {
+    if (sent) return; sent = true; clearInterval(timer);
+    var tok = meta.querySelector("[name=csrfmiddlewaretoken]").value;
+    fetch(meta.dataset.doneUrl, {method: "POST", headers: {"X-CSRFToken": tok}}).then(function (r) { return r.json(); }).then(function (j) {
+      var ab = document.querySelector(".autodone"); if (ab) ab.innerHTML = '<span class="badge student">✓ Completed</span>';
+      var on = document.querySelector(".pitem.on"); if (on) { on.classList.add("done"); on.querySelector(".tick").textContent = "✓"; }
+      var bar = document.querySelector(".pside .bar i"); if (bar && j.progress) { bar.style.width = j.progress.pct + "%";
+        var t = bar.parentNode.nextElementSibling; if (t) t.textContent = j.progress.pct + "% complete"; }
+    });
+  }
+  window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player("yt", {events: {
+      onStateChange: function (e) { if (e.data === 0) complete(); },
+      onReady: function () { timer = setInterval(function () {
+        try { var d = player.getDuration(); if (d > 0 && player.getCurrentTime() / d >= 0.9) complete(); } catch (x) {} }, 2000); }
+    }});
+  };
+  var s = document.createElement("script"); s.src = "https://www.youtube.com/iframe_api"; document.head.appendChild(s);
+})();
+</script>
+{% endif %}
+{% else %}
+<p><a class="btn" href="{{ lesson.url }}" target="_blank" rel="noopener">{% icon "play" 18 %} Open video</a></p>
+{% endif %}
+{% endwith %}
+{% if lesson.content %}<div class="prose">{{ lesson.content }}</div>{% endif %}

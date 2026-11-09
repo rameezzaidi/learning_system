@@ -1,0 +1,10 @@
+{% load ui %}
+<div class="card">
+  <h3>{% icon "calendar" 18 %} Attendance (30 days)</h3>
+  <ul class="facts">
+    <li><span>Attendance</span><b class="{% if att.pct is not None and att.pct < 75 %}down{% else %}up{% endif %}">{% if att.pct is not None %}{{ att.pct }}%{% else %}—{% endif %}</b></li>
+    <li><span>Present · Late</span><b>{{ att.present }} · {{ att.late }}</b></li>
+    <li><span>Absent · Leave</span><b>{{ att.absent }} · {{ att.leave }}</b></li>
+  </ul>
+  <a class="btn ghost sm" style="margin-top:8px" href="{% url 'attendance:student' student.pk %}">Daily record</a>
+</div>

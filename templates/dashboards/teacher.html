@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load ui %}
+{% block content %}
+<section class="welcome">
+  <div class="w-text"><p class="w-date">{% now "l, j F Y" %}</p><h1>Good day, {{ user.first_name|default:user.username }}</h1><p class="w-sub">Your teaching workspace.</p></div>
+  <div class="w-act"><a class="btn ghost" href="{% url 'academics:my_courses' %}">All my courses</a></div>
+</section>
+
+<h2>My courses</h2>
+<div class="grid g3">
+  {% for c in courses %}
+  <a class="card course-card k-{{ c.subject.name|subj_kind }}" href="{% url 'academics:course_detail' c.pk %}">
+    <h3>{{ c.subject }}</h3><p class="muted" style="margin:0">{{ c.school_class }} · {{ c.n_lessons }} lesson{{ c.n_lessons|pluralize }}</p>
+  </a>
+  {% empty %}<div class="card empty" style="grid-column:1/-1">No courses assigned yet. Please ask the school admin.</div>{% endfor %}
+</div>
+
+<div class="grid g2 charts" style="margin-top:20px">
+  <div class="card"><div class="ch-head"><h2>Lessons per course</h2></div>{% if ch_lessons %}<div class="chart" data-chart='{{ ch_lessons }}'></div>{% else %}<div class="ch-empty">Add lessons to see this chart.</div>{% endif %}</div>
+  <div class="card"><div class="ch-head"><h2>Class average by subject</h2>{% if exam_chart_exam %}<span class="muted">{{ exam_chart_exam.name }}</span>{% endif %}</div>{% if ch_exam %}<div class="chart" data-chart='{{ ch_exam }}'></div>{% else %}<div class="ch-empty">Appears once marks are entered.</div>{% endif %}</div>
+</div>
+
+<div class="quick">
+  <a href="{% url 'academics:my_courses' %}">{% icon "book" 20 %}<span>My courses</span></a>
+  <a href="{% url 'assessments:list' %}">{% icon "clipboard" 20 %}<span>Assessments</span></a>
+  <a href="{% url 'exams:list' %}">{% icon "chart" 20 %}<span>Examinations</span></a>
+</div>
+{% endblock %}

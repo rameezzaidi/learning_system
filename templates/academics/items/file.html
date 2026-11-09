@@ -1,0 +1,3 @@
+{% load ui %}
+{% if lesson.content %}<div class="prose">{{ lesson.content }}</div>{% endif %}
+{% if lesson.file %}<p><a class="btn" href="{{ lesson.file.url }}" download>{% icon "file" 18 %} Download file</a></p>{% endif %}

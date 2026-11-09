@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}My Nuggets{% endblock %}
+{% block content %}
+<section class="welcome ng-hero">
+  <div class="w-text"><p class="w-date">Nuggets</p><h1>Short lessons, made for you</h1>
+    <p class="w-sub">Learn in 5 minutes, check yourself, and revise just before you forget.</p></div>
+  <div class="ng-stats">
+    <div class="ng-stat"><b>🔥 {{ stat.streak }}</b><span>day streak</span></div>
+    <div class="ng-stat"><b>⭐ {{ stat.xp }}</b><span>XP · Level {{ stat.level }}</span></div>
+    <div class="ng-stat"><b>{{ todo|length }}</b><span>to do</span></div>
+  </div>
+</section>
+<div class="ng-level" title="{{ xp_in_level }} / 100 XP to level {{ stat.level|add:1 }}"><i style="width:{{ xp_in_level }}%"></i></div>
+
+{% if due %}
+<div class="page-head"><div><h2 style="margin:0">🔁 Revise now</h2><p class="muted" style="margin:2px 0 0">A quick revisit keeps it in your memory</p></div></div>
+<div class="ng-grid">{% for r in due %}{% include "nuggets/_card.html" with r=r %}{% endfor %}</div>
+{% endif %}
+
+<div class="page-head" style="margin-top:22px"><div><h2 style="margin:0">Recommended for you</h2></div>
+  <form method="post" action="{% url 'nuggets:refresh' %}">{% csrf_token %}<button class="btn ghost">{% icon "sparkles" 18 %} Find nuggets for my weak areas</button></form></div>
+<div class="ng-grid">
+  {% for r in todo %}{% include "nuggets/_card.html" with r=r %}{% empty %}
+  <div class="card empty" style="grid-column:1/-1"><b>You are all caught up 🎉</b><p class="muted">New nuggets appear here automatically when a result or quiz shows an area to improve. You can also press the button above.</p></div>
+  {% endfor %}
+</div>
+
+{% if done %}<h2 style="margin-top:28px">Mastered</h2>
+<div class="ng-grid">{% for r in done %}{% include "nuggets/_card.html" with r=r %}{% endfor %}</div>{% endif %}
+
+<h2 style="margin-top:28px">Badges</h2>
+<div class="badges">
+  {% for key, b in all_badges.items %}<div class="bdg {% if key in stat.badges %}on{% endif %}" title="{{ b.2 }}"><span>{{ b.0 }}</span><b>{{ b.1 }}</b><small>{{ b.2 }}</small></div>{% endfor %}
+</div>
+{% endblock %}

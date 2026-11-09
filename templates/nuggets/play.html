@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% load ui static nuggets_ui %}
+{% block title %}{{ n.title }}{% endblock %}
+{% block content %}
+<div class="ng-play" id="ng" data-check="{% url 'nuggets:check' n.pk %}" data-pass="{{ pass_pct }}">
+  <div class="page-head"><div><p class="muted" style="margin:0">{{ n.course.subject.name }} · {{ n.course.school_class }} · ⏱ {{ n.minutes }} min</p><h1 style="margin:2px 0 0">{{ n.title }}</h1>
+    {% if row and row.reason %}<p class="ng-why">{% icon "sparkles" 14 %} {{ row.reason }}</p>{% endif %}</div>
+    <div class="actions">{% if preview %}<a class="btn ghost" href="{% url 'nuggets:stats' n.pk %}">Manage</a>{% else %}<a class="btn ghost" href="{% url 'nuggets:home' %}">All nuggets</a>{% endif %}</div></div>
+  {% if preview %}<div class="msg info">Preview — results are not recorded for staff.{% if n.review == "pending" %} This AI draft is <b>waiting for review</b> and students cannot see it yet.{% endif %}</div>{% endif %}
+  {% if revision %}<div class="msg info">🔁 Revision time — you mastered this earlier. Take the quick check again to keep it in your memory.</div>{% endif %}
+
+  <div class="ng-tabs" role="tablist">
+    <button type="button" class="on" data-tab="learn">1 · Learn</button>
+    {% if n.cards %}<button type="button" data-tab="practice">2 · Practice</button>{% endif %}
+    <button type="button" data-tab="check">{% if n.cards %}3{% else %}2{% endif %} · Check</button>
+  </div>
+
+  <section class="card ng-pane" data-pane="learn">
+    {% if n.video_url %}{% with e=n.video_url|embed %}{% if e %}<div class="ng-video"><iframe src="{{ e }}" allowfullscreen loading="lazy"></iframe></div>{% else %}<p><a class="btn ghost" href="{{ n.video_url }}" target="_blank" rel="noopener">▶ Watch the video</a></p>{% endif %}{% endwith %}{% endif %}
+    <div class="ng-expl">{{ n.explanation|md }}</div>
+    {% if n.points %}<h3>Remember</h3><ul class="ng-points">{% for p in n.points %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+    <div class="ng-nav"><span></span><button type="button" class="btn" data-go="{% if n.cards %}practice{% else %}check{% endif %}">Next →</button></div>
+  </section>
+
+  {% if n.cards %}
+  <section class="card ng-pane" data-pane="practice" hidden>
+    <h3 style="margin-top:0">Flashcards</h3>
+    <div id="ng-cards" data-cards="{{ n.cards|json_attr }}"></div>
+    <div class="ng-nav"><button type="button" class="btn ghost" data-go="learn">← Back</button><button type="button" class="btn" data-go="check">Next →</button></div>
+  </section>
+  {% endif %}
+
+  <section class="card ng-pane" data-pane="check" hidden>
+    <h3 style="margin-top:0">Quick check{% if missed %} <button type="button" class="btn ghost sm" id="ng-only-missed" style="margin-left:8px">Show only the {{ missed|length }} I missed</button>{% endif %}</h3>
+    {% if n.questions %}
+    <form id="ng-form">{% csrf_token %}
+      {% for q in n.questions %}
+      <fieldset class="ng-q {% if forloop.counter0 in missed %}missed{% endif %}" data-i="{{ forloop.counter0 }}"><legend>{{ forloop.counter }}. {{ q.q }}{% if forloop.counter0 in missed %} <span class="ng-miss">↻ missed last time</span>{% endif %}</legend>
+        {% for o in q.options %}<label class="ng-opt"><input type="radio" name="q{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}"> <span>{{ o }}</span></label>{% endfor %}
+        <p class="ng-fb" hidden></p></fieldset>
+      {% endfor %}
+      <div class="ng-nav"><button type="button" class="btn ghost" data-go="{% if n.cards %}practice{% else %}learn{% endif %}">← Back</button><button class="btn" id="ng-submit">Check my answers</button></div>
+    </form>
+    <div id="ng-result" class="ng-result" hidden></div>
+    {% else %}
+    <p class="muted">This nugget has no quiz. Read it, practise, then mark it done.</p>
+    <form id="ng-form">{% csrf_token %}<button class="btn" id="ng-submit">✓ I have understood this</button></form>
+    <div id="ng-result" class="ng-result" hidden></div>
+    {% endif %}
+  </section>
+
+  {% if not preview or True %}
+  <section class="card ng-tutor" id="ng-tutor" data-url="{% url 'nuggets:tutor' n.pk %}">
+    <button type="button" class="ng-tutor-h" id="tutor-toggle" aria-expanded="false">{% icon "sparkles" 18 %} <b>Ask your tutor</b><small>Stuck? Ask anything about this lesson</small></button>
+    <div class="ng-tutor-b" hidden>
+      <div class="tutor-log" id="tutor-log" aria-live="polite"><p class="muted">Hi! Ask me what you did not understand — I will explain it step by step.</p></div>
+      <form id="tutor-form" class="tutor-form">{% csrf_token %}<input class="input" id="tutor-in" maxlength="500" placeholder="e.g. Why do we add only the tops?" autocomplete="off"><button class="btn" id="tutor-send">{% icon "send" 18 %}</button></form>
+      <small class="muted" id="tutor-note"></small>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% if "$" in n.explanation or "$" in n.key_points %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="renderMathInElement(document.getElementById('ng'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>{% endif %}
+<script src="{% static 'js/nuggets.js' %}"></script>
+{% endblock %}

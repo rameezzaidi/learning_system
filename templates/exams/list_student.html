@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Results{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{% if is_parent_view %}{{ student.display_name }} · {% endif %}Exam Results</h1>
+  <p class="muted">Published results and report cards.</p></div>
+  <div class="actions"><a class="btn ghost" href="{% url 'organization:student_profile' student.pk %}">Full profile</a>{% if is_parent_view %}<a class="btn ghost" href="{% url 'academics:child_progress' student.pk %}">Learning progress</a>{% endif %}</div></div>
+<div class="grid g2">
+  {% for r in rows %}
+  <a class="card link" href="{% url 'exams:report_card' r.exam.pk student.pk %}">
+    <h3 style="margin:0">{{ r.exam.name }}</h3><small class="muted">{{ r.exam.start_date|date:"d M Y"|default:"" }}</small>
+    <div class="score" style="margin-top:10px">
+      <div class="big">{% if r.row.pct is None %}—{% else %}{{ r.row.pct }}%{% endif %}</div>
+      <div>{% if r.row.band %}Grade <b>{{ r.row.band.grade }}</b>{% endif %}{% if r.row.rank %} · Position <b>{{ r.row.rank }}</b>{% endif %}<br>
+        <span class="badge {% if r.row.result == 'PASS' %}student{% elif r.row.result == 'FAIL' %}off{% endif %}">{{ r.row.result|title }}</span></div>
+    </div></a>
+  {% empty %}<div class="card empty" style="grid-column:1/-1">No results have been published yet.</div>{% endfor %}
+</div>
+{% endblock %}

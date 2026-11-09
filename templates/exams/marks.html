@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Marks · {{ paper.subject_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Marks · {{ paper.subject_name }}</h1>
+  <p class="muted">{{ paper.exam.name }} · {{ paper.exam.school_class }} · out of <b>{{ paper.total_marks|floatformat:"-2" }}</b> (pass {{ paper.pass_marks|floatformat:"-2" }}) · {{ entered }} / {{ rows|length }} entered</p></div>
+  <div style="display:flex;gap:8px"><a class="btn ghost" href="{% url 'exams:marks_import' paper.pk %}">Import CSV</a><a class="btn ghost" href="{% url 'exams:detail' paper.exam_id %}">Back</a></div></div>
+{% if locked %}<div class="card" style="border-color:var(--danger)"><b>Marks are locked.</b> You can view them, but not change them. Ask the admin to unlock.</div>{% endif %}
+<form method="post" class="card">{% csrf_token %}
+  <div class="table-wrap"><table class="marks">
+    <thead><tr><th style="width:44px">#</th><th>Student</th><th style="width:140px">Marks</th><th style="width:90px">Absent</th><th>Remarks</th></tr></thead>
+    {% for r in rows %}
+    <tr {% if r.error %}class="rowerr"{% endif %}><td class="muted">{{ forloop.counter }}</td><td><b>{{ r.student.display_name }}</b><small class="muted"> {{ r.student.username }}</small></td>
+      <td><input class="input" type="text" inputmode="decimal" name="m_{{ r.student.id }}" value="{{ r.marks }}" {% if locked %}disabled{% endif %} autocomplete="off" data-row="{{ forloop.counter0 }}">
+        {% if r.error %}<small class="err">{{ r.error }}</small>{% endif %}</td>
+      <td><input type="checkbox" name="a_{{ r.student.id }}" {% if r.absent %}checked{% endif %} {% if locked %}disabled{% endif %}></td>
+      <td><input class="input" name="r_{{ r.student.id }}" value="{{ r.remarks }}" {% if locked %}disabled{% endif %} placeholder="optional"></td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No students in this class.</td></tr>{% endfor %}
+  </table></div>
+  {% if not locked and rows %}<div style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="btn">{% icon "check" 18 %} Save marks</button>
+    <small class="muted">Tip: type a mark and press Enter to jump to the next student. Leave blank if not marked yet.</small></div>{% endif %}
+</form>
+<script>
+(function () {
+  var f = Array.prototype.slice.call(document.querySelectorAll("input[data-row]"));
+  f.forEach(function (el, i) { el.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); var n = f[i + 1]; if (n) { n.focus(); n.select(); } } }); });
+  document.querySelectorAll("input[type=checkbox][name^=a_]").forEach(function (c) { c.addEventListener("change", function () {
+    var m = c.closest("tr").querySelector("input[data-row]"); if (c.checked) { m.value = ""; } m.disabled = c.checked; }); 
+    if (c.checked) c.closest("tr").querySelector("input[data-row]").disabled = true; });
+})();
+</script>
+{% endblock %}

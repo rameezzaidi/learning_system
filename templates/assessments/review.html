@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Review{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ att.student.display_name }}</h1><p class="muted">{{ att.assessment.title }} · {{ att.score|floatformat:"-2" }} / {{ att.total|floatformat:"-2" }}</p></div>
+  <a class="btn ghost" href="{% url 'assessments:results' att.assessment_id %}">Back</a></div>
+<form method="post">{% csrf_token %}
+  {% for r in rows %}
+  <div class="card qcard">
+    <div class="qhead"><span class="num">{{ forloop.counter }}</span><div class="grow">{{ r.q.text|linebreaksbr }}</div><small class="muted">max {{ r.q.points|floatformat:"-2" }}</small></div>
+    {% if r.q.kind == "mcq" or r.q.kind == "tf" %}
+      <div class="ans">{{ r.ans.choice.text|default:"Not answered" }}</div>
+    {% else %}<div class="ans">{{ r.ans.text|default:"Not answered"|linebreaksbr }}</div>{% endif %}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <input class="input" style="width:110px" type="number" step="0.5" min="0" max="{{ r.q.points|floatformat:"-2" }}" name="pts{{ r.q.id }}" value="{{ r.ans.points|default_if_none:'' }}" placeholder="Marks">
+      <input class="input" style="flex:1;min-width:200px" name="fb{{ r.q.id }}" value="{{ r.ans.feedback }}" placeholder="Feedback (optional)">
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn">{% icon "check" 18 %} Save marks</button>
+</form>
+{% include "partials/subject_ui.html" with name=att.assessment.course.subject.name %}
+{% endblock %}

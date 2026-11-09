@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Classes{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Classes</h1><p class="muted">Create classes, enrol students and assign teachers to subjects.</p></div>
+  <a class="btn" href="{% url 'academics:class_create' %}">{% icon "plus" 18 %} New class</a>
+</div>
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>Class</th><th>Year</th><th>Students</th><th>Subjects</th><th></th></tr></thead>
+    {% for c in classes %}
+    <tr>
+      <td><a href="{% url 'academics:class_detail' c.pk %}"><b>{{ c }}</b></a></td>
+      <td class="muted">{{ c.academic_year|default:"—" }}</td>
+      <td>{{ c.n_students }}</td><td>{{ c.n_courses }}</td>
+      <td><div class="actions">
+        <a class="btn ghost sm" href="{% url 'academics:class_detail' c.pk %}">Open</a>
+        <a class="btn ghost sm" href="{% url 'academics:class_edit' c.pk %}">{% icon "edit" 16 %}</a>
+      </div></td>
+    </tr>
+    {% empty %}<tr><td colspan="5" class="empty">No classes yet. Create your first class.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

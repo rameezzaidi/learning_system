@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}My Courses{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My Courses</h1>
+  <p class="muted">{% if user.is_student %}{% if cls %}{{ cls }} · pick up where you left off{% else %}You are not in a class yet.{% endif %}{% else %}Courses you teach.{% endif %}</p></div></div>
+
+{% if user.is_teacher %}
+<div class="grid g3">
+  {% for c in courses %}
+  <a class="card ccard" href="{% url 'academics:course_detail' c.pk %}">
+    <div class="ccover" style="{{ c.subject.name|cover }}"><span>{{ c.subject.name|slice:":2"|upper }}</span></div>
+    <div class="cbody"><h3>{{ c.subject }}</h3>
+      <p class="muted" style="margin:0">{{ c.school_class }} · {{ c.n_modules }} module{{ c.n_modules|pluralize }} · {{ c.n_lessons }} item{{ c.n_lessons|pluralize }}</p></div>
+  </a>
+  {% empty %}<div class="card empty" style="grid-column:1/-1">No courses assigned to you yet. Please ask the school admin.</div>{% endfor %}
+</div>
+{% else %}
+<div class="grid g3">
+  {% for r in rows %}
+  <div class="card ccard">
+    <a class="ccover" href="{% url 'academics:course_detail' r.course.pk %}" style="{{ r.course.subject.name|cover }}"><span>{{ r.course.subject.name|slice:":2"|upper }}</span>
+      {% if r.finished %}<em class="ribbon">Completed</em>{% endif %}</a>
+    <div class="cbody">
+      <small class="muted">{{ r.course.teacher.display_name|default:"Teacher not assigned" }}</small>
+      <h3><a href="{% url 'academics:course_detail' r.course.pk %}">{{ r.course.subject }}</a></h3>
+      <small class="muted">{{ r.n_modules }} module{{ r.n_modules|pluralize }} · {{ r.total }} item{{ r.total|pluralize }}</small>
+      <div class="bar" style="margin:10px 0 4px"><i style="width:{{ r.pct }}%"></i></div>
+      <small class="muted">{{ r.pct }}% complete</small>
+      {% if r.continue %}<a class="btn sm" style="margin-top:12px;width:100%;justify-content:center" href="{% url 'academics:lesson_view' r.continue.pk %}">
+        {% if r.finished %}Review course{% elif r.done %}Continue{% else %}Start course{% endif %}</a>
+      {% else %}<p class="muted" style="margin:12px 0 0"><small>Content coming soon.</small></p>{% endif %}
+    </div>
+  </div>
+  {% empty %}<div class="card empty" style="grid-column:1/-1">No subjects in your class yet.</div>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

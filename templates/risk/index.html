@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Early warning{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Early warning</h1><p class="muted">Students showing signs they may need support. These are possible risks to look into, not a judgment about the student.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if can_scan %}<a class="btn ghost" href="{% url 'risk:settings' %}">{% icon "settings" 18 %} Thresholds</a>
+    <form method="post" action="{% url 'risk:scan' %}" class="inline">{% csrf_token %}<button class="btn">{% icon "bell" 18 %} Run scan now</button></form>{% endif %}
+  </div></div>
+<form class="toolbar" method="get">
+  <select class="select" style="max-width:180px" name="status" onchange="this.form.submit()"><option value="active" {% if status == 'active' %}selected{% endif %}>Active</option><option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option></select>
+  <select class="select" style="max-width:180px" name="level" onchange="this.form.submit()"><option value="">All levels</option>{% for v, l in levels %}<option value="{{ v }}" {% if level == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Student</th><th>Level</th><th>Why</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+  {% for a in rows %}<tr>
+    <td><div class="who">{% avatar a.student %}<div><a href="{% url 'risk:detail' a.pk %}"><b>{{ a.student.display_name }}</b></a><small>{{ a.student.student_profile.campus.name|default:"" }}</small></div></div></td>
+    <td><span class="badge lvl-{{ a.level }}">{{ a.get_level_display }}</span></td>
+    <td><ul class="reasons">{% for r in a.reasons|slice:":3" %}<li>{{ r }}</li>{% endfor %}</ul></td>
+    <td>{{ a.get_status_display }}</td><td>{{ a.updated_at|date:"d M" }}</td>
+    <td><a class="btn ghost sm" href="{% url 'risk:detail' a.pk %}">Open</a></td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No {{ status }} alerts{% if can_scan and status == 'active' %}. Run a scan to check for new ones{% endif %}.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

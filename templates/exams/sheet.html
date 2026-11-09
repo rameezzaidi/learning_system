@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Result sheet{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Result sheet · {{ exam.name }}</h1><p class="muted">{{ exam.school_class }} · ranked by percentage</p></div>
+  <div style="display:flex;gap:8px"><a class="btn ghost" href="?format=csv">Export CSV</a><a class="btn ghost" href="{% url 'exams:analysis' exam.pk %}">Analysis &amp; AI</a><a class="btn ghost" href="{% url 'exams:detail' exam.pk %}">Back</a></div></div>
+<div class="card table-wrap"><table class="sheet">
+  <thead><tr><th>Rank</th><th>Student</th>{% for p in res.papers %}<th class="r">{{ p.subject_name }}<br><small class="muted">/{{ p.total_marks|floatformat:"-2" }}</small></th>{% endfor %}<th class="r">Total</th><th class="r">%</th><th>Grade</th><th class="r">GPA</th><th>Result</th><th></th></tr></thead>
+  {% for r in rows %}
+  <tr><td>{{ r.rank|default:"—" }}</td><td><b>{{ r.student.display_name }}</b></td>
+    {% for c in r.cells %}<td class="r {% if c.entered and not c.passed %}low{% endif %}">{% if not c.entered %}<span class="muted">—</span>{% elif c.absent %}ABS{% else %}{{ c.marks|floatformat:"-2" }}{% endif %}</td>{% endfor %}
+    <td class="r">{{ r.total|floatformat:"-2" }}/{{ r.out_of|floatformat:"-2" }}</td><td class="r"><b>{% if r.pct is None %}—{% else %}{{ r.pct }}{% endif %}</b></td>
+    <td>{% if r.band %}<span class="badge {% if r.band.grade == 'F' %}off{% else %}student{% endif %}">{{ r.band.grade }}</span>{% endif %}</td><td class="r">{{ r.gpa|default_if_none:"—" }}</td>
+    <td><span class="badge {% if r.result == 'PASS' %}student{% elif r.result == 'FAIL' %}off{% endif %}">{{ r.result|title }}</span></td>
+    <td><a class="btn ghost sm" href="{% url 'exams:report_card' exam.pk r.student.pk %}">Report card</a></td></tr>
+  {% empty %}<tr><td colspan="20" class="empty">No students.</td></tr>{% endfor %}
+  <tfoot><tr><td></td><td><b>Class average</b></td>{% for s in res.stats %}<td class="r muted">{% if s.avg_pct is None %}—{% else %}{{ s.avg_pct }}%{% endif %}</td>{% endfor %}<td colspan="6"></td></tr></tfoot>
+</table></div>
+{% endblock %}

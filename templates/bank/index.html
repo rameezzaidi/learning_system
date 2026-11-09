@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Question bank{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Question bank</h1><p class="muted">Build a reusable pool of questions per course, then generate random quizzes and tests from it.</p></div></div>
+<div class="card table-wrap"><table><thead><tr><th>Course</th><th>Questions</th><th></th></tr></thead>
+  {% for c, n in rows %}<tr><td><b>{{ c }}</b></td><td>{{ n }}</td><td><a class="btn ghost sm" href="{% url 'bank:course' c.pk %}">Open</a></td></tr>
+  {% empty %}<tr><td colspan="3" class="empty">No courses available to you.</td></tr>{% endfor %}</table></div>
+{% endblock %}

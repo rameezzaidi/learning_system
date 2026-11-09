@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ a.applicant_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ a.applicant_name }} <span class="badge">{{ a.get_status_display }}</span></h1><p class="muted">Guardian {{ a.guardian_name }} · {{ a.guardian_phone }} {{ a.guardian_email }}</p></div><a class="btn ghost" href="{% url 'sis:admissions' %}">Back</a></div>
+{% if creds %}<div class="card" style="border:2px solid var(--primary);margin-bottom:16px"><h3>Login details — shown once</h3>
+  <p>Student: <b>{{ creds.student }}</b> / <code>{{ creds.spw }}</code>{% if creds.parent %}<br>Parent: <b>{{ creds.parent }}</b> / <code>{{ creds.ppw }}</code>{% endif %}</p><p class="muted">Share these with the family and ask them to change the password after first sign-in.</p></div>{% endif %}
+<div class="grid g2">
+  <div class="card"><h3>Details</h3><ul class="facts"><li><span>Date of birth</span><b>{{ a.date_of_birth|date:"d M Y"|default:"—" }}</b></li><li><span>Previous school</span><b>{{ a.previous_school|default:"—" }}</b></li>
+    <li><span>Class</span><b>{{ a.applying_class|default:"—" }}</b></li><li><span>Campus</span><b>{{ a.campus.name|default:"—" }}</b></li></ul>
+    {% if a.notes %}<p>{{ a.notes }}</p>{% endif %}
+    {% if a.student %}<p><a class="btn" href="{% url 'organization:student_profile' a.student.pk %}">Open student profile</a></p>{% endif %}</div>
+  {% if can_manage and a.status != 'admitted' %}<div>
+    <form method="post" class="card">{% csrf_token %}<h3>Move along</h3><input type="hidden" name="action" value="status">
+      <label>Status<select class="select" name="status">{% for v, l in statuses %}{% if v != 'admitted' %}<option value="{{ v }}" {% if a.status == v %}selected{% endif %}>{{ l }}</option>{% endif %}{% endfor %}</select></label>
+      <label>Notes<textarea class="input" name="notes" rows="2">{{ a.notes }}</textarea></label><button class="btn ghost" style="margin-top:8px">Update</button></form>
+    <form method="post" class="card" style="margin-top:16px">{% csrf_token %}<h3>Admit</h3><input type="hidden" name="action" value="admit">
+      <label>Class<select class="select" name="applying_class" onchange="this.form.elements.action.value='class';this.form.submit()"><option value="">Choose…</option>{% for c in classes %}<option value="{{ c.pk }}" {% if a.applying_class_id == c.pk %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="create_parent" checked> Also create a parent login</label>
+      <button class="btn" style="margin-top:8px" {% if not a.applying_class %}disabled{% endif %}>{% icon "check" 18 %} Admit student</button></form></div>{% endif %}
+</div>
+{% endblock %}

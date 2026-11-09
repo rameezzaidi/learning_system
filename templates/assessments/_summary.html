@@ -1,0 +1,13 @@
+{% for s in summary %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+    <div><h2 style="margin:0">{{ s.course.subject }}</h2><small class="muted">{{ s.course.teacher.display_name|default:"Teacher not assigned" }}</small></div>
+    <div><span class="badge {% if s.letter == 'F' %}off{% else %}student{% endif %}">{% if s.avg is None %}No grade yet{% else %}{{ s.avg }}% · {{ s.letter }}{% endif %}</span></div>
+  </div>
+  {% if s.lessons %}<div style="margin:10px 0"><div class="bar"><i style="width:{{ s.lessons.pct }}%"></i></div><small class="muted">{{ s.lessons.done }} of {{ s.lessons.total }} lessons complete</small></div>{% endif %}
+  {% for i in s.items %}
+  <div class="lesson-row"><div class="grow">{{ i.assessment.title }}<br><small class="muted">{{ i.assessment.get_kind_display }}</small></div>
+    {% if i.attempt %}<a class="btn ghost sm" href="{% url 'assessments:result' i.attempt.pk %}">{{ i.pct }}%{% if i.attempt.needs_review %}*{% endif %}</a>{% else %}<small class="muted">Not attempted</small>{% endif %}</div>
+  {% endfor %}
+</div>
+{% empty %}<div class="card empty">No subjects yet.</div>{% endfor %}

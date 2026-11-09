@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Bell schedule{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Bell schedule</h1><p class="muted">The periods and breaks every class timetable is built from.</p></div></div>
+<div class="grid g2">
+<div class="card table-wrap"><table><thead><tr><th>#</th><th>Name</th><th>Time</th><th></th></tr></thead>
+  {% for p in periods %}<tr><td>{{ p.order }}</td><td><b>{{ p.name }}</b>{% if p.is_break %} <span class="badge">Break</span>{% endif %}</td><td>{{ p.start_time|time:"H:i" }}–{{ p.end_time|time:"H:i" }}</td>
+    <td><form method="post" class="inline" onsubmit="return confirm('Delete this period? Lessons in it are removed from every timetable.')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="period" value="{{ p.pk }}"><button class="btn ghost sm">Delete</button></form></td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No periods yet.</td></tr>{% endfor %}</table></div>
+<form method="post" class="card">{% csrf_token %}<h3>Add a period</h3><input type="hidden" name="action" value="add">
+  <label>Name<input class="input" name="name" maxlength="40" required placeholder="Period 1"></label>
+  <div class="grid g2"><label>Start<input class="input" type="time" name="start_time" required></label><label>End<input class="input" type="time" name="end_time" required></label></div>
+  <label>Order<input class="input" type="number" name="order" min="1" value="{{ next_order }}" required></label>
+  <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="is_break"> This is a break</label>
+  <button class="btn" style="margin-top:8px">{% icon "plus" 18 %} Add</button></form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1></div>
+  <a class="btn ghost" href="{% if back_arg %}{% url back back_arg %}{% else %}{% url back %}{% endif %}">Back</a></div>
+<form method="post" class="card" style="max-width:640px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}
+  <button class="btn">{% icon "check" 18 %} Save</button>
+</form>
+{% endblock %}

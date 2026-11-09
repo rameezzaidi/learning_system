@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Receipt {{ e.receipt_no }}{% endblock %}
+{% block content %}
+<div class="page-head no-print"><div><h1>Receipt</h1></div><div style="display:flex;gap:8px"><a class="btn ghost" href="{% url 'fees:ledger' student.pk %}">Back</a><button class="btn" onclick="window.print()">Print</button></div></div>
+<div class="card" style="max-width:640px;margin:auto">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--line);padding-bottom:12px">
+    <div><h2 style="margin:0">{{ school.school_name }}</h2><small class="muted">Fee receipt</small></div>
+    <div style="text-align:right"><b>{{ e.receipt_no }}</b><br><small class="muted">{{ e.entry_date|date:"d M Y" }}</small></div></div>
+  <table style="margin-top:12px">
+    <tr><td class="muted">Student</td><td><b>{{ student.display_name }}</b>{% if student.student_profile.admission_no %} ({{ student.student_profile.admission_no }}){% endif %}</td></tr>
+    <tr><td class="muted">Class</td><td>{{ class|default:"—" }}</td></tr>
+    <tr><td class="muted">Received</td><td><b style="font-size:20px">{{ school.currency }} {{ e.credit|floatformat:"-2g" }}</b></td></tr>
+    <tr><td class="muted">Method</td><td>{{ e.get_method_display }}{% if e.reference %} · {{ e.reference }}{% endif %}</td></tr>
+    {% if e.description and e.description != "Payment received" %}<tr><td class="muted">Note</td><td>{{ e.description }}</td></tr>{% endif %}
+    <tr><td class="muted">Balance now</td><td>{{ school.currency }} {{ balance|floatformat:"-2g" }}</td></tr>
+    <tr><td class="muted">Received by</td><td>{{ e.created_by.display_name|default:"—" }}</td></tr>
+  </table>
+  <p class="muted" style="margin-top:16px"><small>This is a computer-generated receipt.</small></p>
+</div>
+{% endblock %}

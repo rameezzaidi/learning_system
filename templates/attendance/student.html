@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Attendance · {{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Attendance · {{ student.display_name }}</h1><p class="muted">{{ start|date:"d M" }} to {{ end|date:"d M Y" }}. Approved leave is excused and not counted against attendance.</p></div></div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:var(--primary)"><b>{% if s.pct is not None %}{{ s.pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Attendance</span></div>
+  <div class="kpi" style="--h:#10b981"><b>{{ s.present }}</b><span class="kpi-l">Present</span></div>
+  <div class="kpi" style="--h:#f43f5e"><b>{{ s.absent }}</b><span class="kpi-l">Absent</span></div>
+  <div class="kpi" style="--h:#f59e0b"><b>{{ s.late }}</b><span class="kpi-l">Late · {{ s.leave }} leave</span></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card table-wrap"><h3>Daily record</h3><table>
+    <thead><tr><th>Date</th><th>Status</th><th>Note</th></tr></thead>
+    {% for r in recs|slice:":60" %}<tr><td>{{ r.date|date:"D d M" }}</td><td><span class="badge att-{{ r.status }}">{{ r.get_status_display }}</span></td><td>{{ r.note }}</td></tr>
+    {% empty %}<tr><td colspan="3" class="empty">No attendance marked in this period.</td></tr>{% endfor %}
+  </table></div>
+  <div>
+    {% if can_request %}<div class="card"><h3>Request leave</h3>
+      <form method="post" action="{% url 'attendance:leave_request' student.pk %}">{% csrf_token %}
+        <div class="grid g2"><label>From<input class="input" type="date" name="from_date" required></label><label>To<input class="input" type="date" name="to_date" required></label></div>
+        <label>Reason<input class="input" name="reason" maxlength="300" required></label>
+        <button class="btn" style="margin-top:8px">Send request</button></form></div>{% endif %}
+    <div class="card" style="margin-top:16px"><h3>Leave requests</h3><ul class="facts">
+      {% for l in leaves %}<li><span>{{ l.from_date|date:"d M" }} to {{ l.to_date|date:"d M" }} · {{ l.reason|truncatechars:40 }}</span><b>{{ l.get_status_display }}</b></li>
+      {% empty %}<li><span>No leave requests.</span></li>{% endfor %}</ul></div>
+  </div>
+</div>
+{% endblock %}

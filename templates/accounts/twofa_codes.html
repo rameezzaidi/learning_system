@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Backup codes{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Two-step sign-in is on</h1></div></div>
+<div class="card" style="max-width:520px"><h3>Save your backup codes</h3>
+  <p>Each code works once if you lose your phone. They are shown <b>only now</b>.</p>
+  <pre style="font-size:1.05rem;line-height:1.8">{% for c in codes %}{{ c }}
+{% endfor %}</pre>
+  <a class="btn" href="{% url 'accounts:security' %}">I have saved them</a></div>
+{% endblock %}

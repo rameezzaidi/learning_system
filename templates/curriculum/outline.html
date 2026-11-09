@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Curriculum · {{ course.subject }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ course.subject }} · {{ course.school_class }}</h1>
+  <p class="muted">Teacher: {{ course.teacher.display_name|default:"not assigned" }} · {{ cov.done }} of {{ cov.total }} topics taught{% if cov.pct is not None %} ({{ cov.pct }}%){% endif %}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn ghost" href="{% url 'curriculum:index' %}">All courses</a>
+  {% if can_handover %}<a class="btn ghost" href="{% url 'curriculum:handover_new' course.pk %}">{% icon "users" 18 %} Hand over</a>{% endif %}</div></div>
+{% if cov.pct is not None %}<div class="bar" style="margin-bottom:16px"><i style="width:{{ cov.pct }}%"></i></div>{% endif %}
+<div class="split"><div>
+  {% for g in groups %}
+  <div class="card" style="margin-bottom:12px">
+    <h2 style="margin:0">{% if g.unit %}<small class="muted">{{ g.unit }} ›</small> {% endif %}{{ g.chapter|default:"General" }} <small class="muted">{{ g.done }}/{{ g.topics|length }}</small></h2>
+    {% for t in g.topics %}
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)">
+      <div style="flex:1"><b {% if t.is_covered %}style="text-decoration:line-through;opacity:.7"{% endif %}>{{ t.title }}</b>
+        {% if t.outcome %}<br><small class="muted">Outcome: {{ t.outcome }}</small>{% endif %}
+        {% if t.is_covered %}<br><small class="muted">Taught {{ t.covered_on|date:"d M Y" }}{% if t.covered_by %} by {{ t.covered_by.display_name }}{% endif %}{% if t.note %} · {{ t.note }}{% endif %}</small>{% endif %}</div>
+      {% if can_edit %}
+      <form method="post" action="{% url 'curriculum:topic_toggle' t.pk %}" class="inline" style="display:flex;gap:6px">{% csrf_token %}
+        {% if not t.is_covered %}<input class="input" name="note" placeholder="Note (optional)" style="width:150px" maxlength="240" aria-label="Note">{% endif %}
+        <button class="btn {% if t.is_covered %}ghost{% endif %} sm">{% if t.is_covered %}Undo{% else %}{% icon "check" 16 %} Taught{% endif %}</button></form>
+      <form method="post" action="{% url 'curriculum:topic_delete' t.pk %}" class="inline" onsubmit="return confirm('Delete this topic?')">{% csrf_token %}<button class="btn ghost sm" aria-label="Delete topic">×</button></form>
+      {% elif t.is_covered %}<span class="badge">Taught</span>{% endif %}
+    </div>{% endfor %}
+  </div>
+  {% empty %}<div class="card empty">No outline yet.{% if can_edit %} Add topics on the right.{% endif %}</div>{% endfor %}
+</div>
+<aside>
+  {% if can_edit %}
+  <div class="card"><h2>Add topics</h2>
+    <form method="post" action="{% url 'curriculum:topics_add' course.pk %}">{% csrf_token %}
+      <textarea class="input" name="lines" rows="7" placeholder="Unit 1 | Fractions | Adding fractions | Add fractions with unlike denominators&#10;Fractions | Subtracting fractions&#10;Decimals"></textarea>
+      <p class="muted"><small>One topic per line: Unit | Chapter | Topic | Learning outcome. Shorter lines work too (Chapter | Topic, or just Topic).</small></p>
+      <button class="btn">{% icon "plus" 18 %} Add</button></form></div>
+  {% if others %}<div class="card" style="margin-top:12px"><h2>Copy an outline</h2>
+    <form method="post" action="{% url 'curriculum:topics_copy' course.pk %}">{% csrf_token %}
+      <select class="select" name="source">{% for c in others %}<option value="{{ c.pk }}">{{ c.subject }} · {{ c.school_class }}</option>{% endfor %}</select>
+      <button class="btn ghost" style="margin-top:8px">Copy topics here</button></form></div>{% endif %}
+  {% endif %}
+  <div class="card" style="margin-top:12px"><h2>Recent handovers</h2>
+    {% for h in handovers %}<div style="padding:6px 0;border-bottom:1px solid var(--line)"><a href="{% url 'curriculum:handover_detail' h.pk %}"><b>{{ h.get_kind_display }}</b></a><br><small class="muted">{{ h.from_teacher.display_name|default:"—" }} → {{ h.to_teacher.display_name|default:"—" }} · {{ h.created_at|date:"d M" }}</small></div>
+    {% empty %}<p class="muted">None yet.</p>{% endfor %}</div>
+</aside></div>
+{% endblock %}

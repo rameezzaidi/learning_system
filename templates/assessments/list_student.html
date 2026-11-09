@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Assessments{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Assessments</h1><p class="muted">Your quizzes, tests and exams.</p></div></div>
+{% for r in rows %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+    <div>
+      <h3 style="margin:0">{{ r.a.title }}</h3>
+      <small class="muted">{{ r.a.course.subject }} · {{ r.a.get_kind_display }}
+        {% if r.a.duration_minutes %}· {{ r.a.duration_minutes }} min{% endif %}
+        {% if r.a.due_at %}· due {{ r.a.due_at|date:"d M, H:i" }}{% endif %}
+        · {{ r.left }} attempt{{ r.left|pluralize }} left</small>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      {% if r.best %}
+        <span class="badge student">Best: {{ r.best.percent }}%{% if r.best.needs_review %} · marking pending{% endif %}</span>
+        <a class="btn ghost sm" href="{% url 'assessments:result' r.best.pk %}">View result</a>
+      {% endif %}
+      {% if r.in_progress %}
+        <a class="btn sm" href="{% url 'assessments:take' r.in_progress.pk %}">Continue</a>
+      {% elif r.can_start %}
+        <form method="post" action="{% url 'assessments:start' r.a.pk %}" class="inline">{% csrf_token %}
+          <button class="btn sm">{% if r.best %}Try again{% else %}Start{% endif %}</button></form>
+      {% elif not r.best %}<span class="badge off">Closed</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% empty %}<div class="card empty">No assessments have been published for your class yet.</div>{% endfor %}
+{% endblock %}

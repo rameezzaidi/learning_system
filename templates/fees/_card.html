@@ -1,0 +1,11 @@
+{% load ui %}
+<div class="card">
+  <h3>{% icon "clipboard" 18 %} Fees</h3>
+  <ul class="facts">
+    <li><span>{% if fees.balance < 0 %}Advance{% else %}Outstanding{% endif %}</span><b class="{% if fees.balance > 0 %}down{% else %}up{% endif %}">{{ school.currency }} {{ fees.balance|floatformat:"-2g" }}</b></li>
+    <li><span>Monthly fee</span><b>{% if fees.monthly is not None %}{{ school.currency }} {{ fees.monthly|floatformat:"-2g" }}{% else %}Not set{% endif %}</b></li>
+    <li><span>Last payment</span><b>{% if fees.last_payment %}{{ fees.last_payment.entry_date|date:"d M" }} · {{ school.currency }} {{ fees.last_payment.credit|floatformat:"-2g" }}{% else %}—{% endif %}</b></li>
+    {% for r in fees.recent|slice:":4" %}<li><span>{{ r.e.description|default:r.e.get_kind_display|truncatechars:26 }}</span><b>{% if r.e.debit %}+{{ r.e.debit|floatformat:"-2g" }}{% else %}−{{ r.e.credit|floatformat:"-2g" }}{% endif %}</b></li>{% endfor %}
+  </ul>
+  <a class="btn ghost sm" style="margin-top:8px" href="{% url 'fees:ledger' student.pk %}">Full ledger</a>
+</div>

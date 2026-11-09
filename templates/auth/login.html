@@ -1,0 +1,86 @@
+{% load static ui %}<!doctype html>
+<html lang="en" {% include "partials/theme_attrs.html" %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+  <title>Sign in · {{ school.school_name }}</title>
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/premium.css' %}">
+</head>
+<body>
+<div class="auth">
+  <section class="auth-art">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <div class="brand">{% include "partials/logo.html" %}
+      <div class="brand-text"><div class="brand-name">{{ school.school_name }}</div><div class="brand-sub">{{ school.tagline }}</div></div></div>
+
+    <div class="art-body">
+      <h1>{{ school.tagline|default:"Learning, assessment and growth in one place." }}</h1>
+      <p>One platform for administrators, teachers, students and parents, with AI that helps everyone learn better.</p>
+      <div class="rotor" aria-live="off">
+        <span>{% icon "clipboard" 18 %} Smart assessments and instant feedback</span>
+        <span>{% icon "sparkles" 18 %} AI study plans in English and Urdu</span>
+        <span>{% icon "users" 18 %} Parents stay connected to progress</span>
+      </div>
+    </div>
+
+    <div class="mock" aria-hidden="true">
+      <div class="mock-card">
+        <div class="mock-top"><span class="mock-av">SS</span><div><b>Sample student</b><small>Mid Term · Class 8 A</small></div><em class="mock-pill">Grade B</em></div>
+        <div class="mock-main">
+          <div class="mock-ring"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" class="rt"/><circle cx="40" cy="40" r="32" class="rv"/></svg><b data-count="82">0</b><small>%</small></div>
+          <div class="mock-bars">
+            <div><span>English</span><i style="--w:88%"></i></div>
+            <div><span>Maths</span><i style="--w:76%"></i></div>
+            <div><span>Science</span><i style="--w:81%"></i></div>
+            <div><span>Urdu</span><i style="--w:84%"></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-chip c1">{% icon "sparkles" 16 %} Study plan ready</div>
+      <div class="mock-chip c2">Result published</div>
+    </div>
+    <small class="art-foot">&copy; {% now "Y" %} {{ school.school_name }} · Sample preview</small>
+  </section>
+
+  <section class="auth-form">
+    <div class="auth-box">
+      <div class="auth-brand">{% include "partials/logo.html" %}<b>{{ school.school_name }}</b></div>
+      <h1>Welcome back</h1>
+      <p class="muted">Sign in to continue.</p>
+      <form method="post">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="msg error" style="margin-bottom:14px">{{ form.non_field_errors.0 }}</div>{% endif %}
+        <div class="field"><label>Username</label>{{ form.username }}</div>
+        <div class="field"><label>Password</label>{{ form.password }}</div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button class="btn block">Sign in</button>
+      </form>
+
+      {% if debug %}
+      <div class="card demo">
+        <b>Demo accounts</b>
+        <table>
+          <tr><td>Super Admin</td><td><code>admin</code> / <code>admin123</code></td></tr>
+          <tr><td>Teacher</td><td><code>teacher1</code> / <code>demo123</code></td></tr>
+          <tr><td>Student</td><td><code>student1</code> / <code>demo123</code></td></tr>
+          <tr><td>Parent</td><td><code>parent1</code> / <code>demo123</code></td></tr>
+          <tr><td>Head Office</td><td><code>headoffice1</code> / <code>demo123</code></td></tr>
+          <tr><td>Regional Director</td><td><code>regional1</code> / <code>demo123</code></td></tr>
+          <tr><td>Principal</td><td><code>principal1</code> / <code>demo123</code></td></tr>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+<script>
+(function(){var n=document.querySelector("[data-count]");if(!n)return;var t=+n.dataset.count,s=null;
+function f(ts){if(!s)s=ts;var p=Math.min(1,(ts-s)/1400);n.textContent=Math.round(t*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)}
+setTimeout(function(){requestAnimationFrame(f)},500)})();
+</script>
+</body>
+</html>

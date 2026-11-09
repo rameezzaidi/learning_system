@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Handover report{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Handover report</h1>
+  <p class="muted">{{ s.course }} · {{ h.get_kind_display }} · {{ h.created_at|date:"d M Y H:i" }}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap" class="no-print"><a class="btn ghost" href="{% url 'curriculum:handover_list' %}">All handovers</a>
+    <a class="btn ghost" href="{% url 'curriculum:outline' h.course_id %}">Open outline</a><button class="btn ghost" onclick="window.print()">Print</button></div></div>
+<div class="grid g3">
+  <div class="card"><b>From</b><br>{{ h.from_teacher.display_name|default:"No previous teacher" }}</div>
+  <div class="card"><b>To</b><br>{{ h.to_teacher.display_name|default:"—" }}{% if h.expected_return %}<br><small class="muted">Original teacher expected back {{ h.expected_return|date:"d M Y" }}</small>{% endif %}</div>
+  <div class="card"><b>Status</b><br><span class="badge">{{ h.get_status_display }}</span>{% if h.acknowledged_at %}<br><small class="muted">{{ h.acknowledged_at|date:"d M Y H:i" }}{% if h.ack_note %} · {{ h.ack_note }}{% endif %}</small>{% endif %}</div>
+</div>
+{% if h.reason %}<div class="card" style="margin-top:12px"><b>Reason:</b> {{ h.reason }}</div>{% endif %}
+<div class="card" style="margin-top:12px;border-left:4px solid var(--primary)"><h2 style="margin:0 0 6px">Continue from here</h2>
+  {% if s.last_title %}<p style="margin:0">Last topic taught: <b>{{ s.last_title }}</b>{% if s.last_on %} on {{ s.last_on }}{% endif %}.</p>{% else %}<p style="margin:0">No topic has been marked as taught yet — start from the beginning of the outline.</p>{% endif %}
+  <p class="muted" style="margin:6px 0 0">{{ s.done }} of {{ s.total }} topics taught{% if s.pct is not None %} ({{ s.pct }}%){% endif %}. Right now: {{ live.done }} of {{ live.total }}.</p></div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card"><h2>Up next</h2>
+    {% for t in s.next_topics %}<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>{{ t.title }}</b>{% if t.chapter %} <small class="muted">{{ t.chapter }}</small>{% endif %}{% if t.outcome %}<br><small class="muted">Outcome: {{ t.outcome }}</small>{% endif %}</div>
+    {% empty %}<p class="muted">Nothing pending.</p>{% endfor %}
+    {% if s.pending_count > s.next_topics|length %}<small class="muted">+ {{ s.pending_count }} pending in total</small>{% endif %}</div>
+  <div class="card"><h2>Already done</h2>
+    {% if s.completed_chapters %}<p><b>Completed chapters:</b> {{ s.completed_chapters|join:", " }}</p>{% endif %}
+    {% for t in s.completed_topics %}<span class="badge" style="margin:2px">{{ t }}</span>{% empty %}<p class="muted">No topics taught yet.</p>{% endfor %}</div>
+</div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card"><h2>Students needing attention <small class="muted">({{ s.n_students }} in class)</small></h2>
+    {% for a in s.attention %}<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>{{ a.student }}</b><br><small class="muted">{{ a.reasons }}</small></div>{% empty %}<p class="muted">No student flagged.</p>{% endfor %}</div>
+  <div class="card"><h2>Teaching resources &amp; assessments</h2>
+    <p>{{ s.lessons }} published lesson item{{ s.lessons|pluralize }} · {{ s.open_help }} open help request{{ s.open_help|pluralize }}</p>
+    {% for a in s.assessments %}<div style="padding:4px 0"><b>{{ a.title }}</b> <small class="muted">{{ a.kind }}{% if not a.published %} · draft{% endif %}</small></div>{% empty %}<p class="muted">No assessments yet.</p>{% endfor %}</div>
+</div>
+<div class="no-print" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+  {% if can_ack %}<form method="post" action="{% url 'curriculum:handover_ack' h.pk %}" style="display:flex;gap:8px">{% csrf_token %}<input class="input" name="note" placeholder="Note (optional)" maxlength="300"><button class="btn">{% icon "check" 18 %} Acknowledge handover</button></form>{% endif %}
+  {% if can_close %}<form method="post" action="{% url 'curriculum:handover_close' h.pk %}">{% csrf_token %}<button class="btn ghost">End this cover</button></form>{% endif %}
+</div>
+{% endblock %}

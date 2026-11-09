@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Executive dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Executive dashboard</h1><p class="muted">One line per campus: learning, attendance, fees and warnings.</p></div><a class="btn ghost" href="?format=csv">{% icon "chart" 18 %} Export CSV</a></div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:var(--primary)"><b>{{ tot.students }}</b><span class="kpi-l">Students</span></div>
+  <div class="kpi" style="--h:#10b981"><b>{% if tot.collection is not None %}{{ tot.collection }}%{% else %}—{% endif %}</b><span class="kpi-l">Fees collected (this month)</span></div>
+  <div class="kpi" style="--h:#f59e0b"><b>{{ tot.alerts }}</b><span class="kpi-l">Open early warnings</span></div>
+  <div class="kpi" style="--h:#6366f1"><b>{{ rows|length }}</b><span class="kpi-l">Campuses</span></div>
+</div>
+<div class="card table-wrap" style="margin-top:16px"><table><thead><tr><th>Campus</th><th>Students</th><th>Avg exam</th><th>Pass rate</th><th>Attendance (30d)</th><th>Fee collection</th><th>Warnings</th></tr></thead>
+  {% for r in rows %}<tr><td><b>{{ r.campus.name }}</b><br><small>{{ r.region.name }}</small></td><td>{{ r.students }}</td><td>{% if r.avg_pct is not None %}{{ r.avg_pct }}%{% else %}—{% endif %}</td><td>{% if r.pass_rate is not None %}{{ r.pass_rate }}%{% else %}—{% endif %}</td>
+    <td>{% if r.attendance is not None %}{{ r.attendance }}%{% else %}—{% endif %}</td><td>{% if r.collection is not None %}{{ r.collection }}%{% else %}—{% endif %}</td><td>{{ r.alerts }}</td></tr>
+  {% empty %}<tr><td colspan="7" class="empty">No campuses in your scope.</td></tr>{% endfor %}</table></div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Subjects{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Subjects</h1><p class="muted">The subjects your school teaches. Add them to classes from the class page.</p></div></div>
+<div class="grid g2" style="align-items:start">
+  <div class="card table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Code</th><th>Used in</th><th></th></tr></thead>
+      {% for s in subjects %}
+      <tr><td><b>{{ s.name }}</b></td><td class="muted">{{ s.code|default:"—" }}</td><td>{{ s.n_courses }} class{{ s.n_courses|pluralize:"es" }}</td>
+        <td><div class="actions"><form method="post" action="{% url 'academics:subject_delete' s.pk %}" class="inline" onsubmit="return confirm('Delete this subject and its courses?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form></div></td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No subjects yet.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <form method="post" class="card">{% csrf_token %}
+    <h2>Add subject</h2>
+    {% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}
+    <button class="btn">{% icon "plus" 18 %} Add</button>
+  </form>
+</div>
+{% endblock %}

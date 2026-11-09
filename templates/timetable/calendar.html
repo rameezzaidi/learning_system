@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Academic calendar{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Academic calendar</h1><p class="muted">{% if term %}Now in <b>{{ term.name }}</b> ({{ term.start_date|date:"d M" }} to {{ term.end_date|date:"d M Y" }}).{% else %}Holidays, exams, events and terms.{% endif %}</p></div>
+  <div style="display:flex;gap:8px;align-items:center"><a class="btn ghost sm" href="?month={{ prev|date:'Y-m' }}">←</a><b>{{ first|date:"F Y" }}</b><a class="btn ghost sm" href="?month={{ next|date:'Y-m' }}">→</a></div></div>
+<div class="card table-wrap"><table class="cal">
+  <thead><tr>{% for d in weeks.0 %}<th>{{ d.day|date:"D" }}</th>{% endfor %}</tr></thead>
+  {% for w in weeks %}<tr>{% for c in w %}<td class="{% if not c.in_month %}cal-out{% endif %} {% if c.day == today %}cal-today{% endif %}"><span class="cal-n">{{ c.day.day }}</span>
+    {% for e in c.events|slice:":3" %}<span class="cal-ev ev-{{ e.kind }}" title="{{ e.title }}{% if e.campus %} · {{ e.campus.name }}{% endif %}">{{ e.title|truncatechars:16 }}</span>{% endfor %}
+    {% if c.events|length > 3 %}<small>+{{ c.events|length|add:"-3" }}</small>{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</table></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Coming up (60 days)</h3><ul class="facts">
+    {% for e in upcoming %}<li><span><b>{{ e.title }}</b><br><small>{{ e.get_kind_display }} · {{ e.start_date|date:"d M" }}{% if e.end_date != e.start_date %} to {{ e.end_date|date:"d M" }}{% endif %}{% if e.campus %} · {{ e.campus.name }}{% endif %}</small></span>
+      {% if can %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="delete_event"><input type="hidden" name="id" value="{{ e.pk }}"><button class="btn ghost sm" aria-label="Delete {{ e.title }}">Delete</button></form>{% endif %}</li>
+    {% empty %}<li><span>Nothing scheduled.</span></li>{% endfor %}</ul>
+    <h3 style="margin-top:16px">Terms</h3><ul class="facts">{% for t in terms %}<li><span>{{ t.name }}<br><small>{{ t.start_date|date:"d M Y" }} to {{ t.end_date|date:"d M Y" }}{% if t.campus %} · {{ t.campus.name }}{% endif %}</small></span>
+      {% if can %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="delete_term"><input type="hidden" name="id" value="{{ t.pk }}"><button class="btn ghost sm">Delete</button></form>{% endif %}</li>{% empty %}<li><span>No terms set.</span></li>{% endfor %}</ul></div>
+  {% if can %}<div>
+  <form method="post" class="card">{% csrf_token %}<h3>Add holiday / event</h3><input type="hidden" name="action" value="add_event">
+    <label>Title<input class="input" name="title" maxlength="120" required></label>
+    <div class="grid g2"><label>Type<select class="select" name="kind">{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
+      <label>Campus<select class="select" name="campus">{% if all_ok %}<option value="">All campuses</option>{% endif %}{% for c in campuses %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label></div>
+    <div class="grid g2"><label>From<input class="input" type="date" name="start_date" required></label><label>To (optional)<input class="input" type="date" name="end_date"></label></div>
+    <label>Note<input class="input" name="note" maxlength="300"></label><button class="btn" style="margin-top:8px">{% icon "plus" 18 %} Add</button></form>
+  <form method="post" class="card" style="margin-top:16px">{% csrf_token %}<h3>Add term</h3><input type="hidden" name="action" value="add_term">
+    <label>Name<input class="input" name="title" maxlength="60" required placeholder="Term 1 2026-27"></label>
+    <div class="grid g2"><label>From<input class="input" type="date" name="start_date" required></label><label>To<input class="input" type="date" name="end_date" required></label></div>
+    <label>Campus<select class="select" name="campus">{% if all_ok %}<option value="">All campuses</option>{% endif %}{% for c in campuses %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label>
+    <button class="btn" style="margin-top:8px">{% icon "plus" 18 %} Add term</button></form></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load ui %}
+{% block content %}
+<section class="welcome">
+  <div class="w-text"><p class="w-date">{% now "l, j F Y" %}</p><h1>Welcome, {{ user.first_name|default:user.username }}</h1><p class="w-sub">Follow your children's learning.</p></div>
+</section>
+
+<h2>My children</h2>
+<div class="kids">
+  {% for k in kids %}
+  <a class="card course-card" href="{% url 'organization:family' k.student.pk %}">
+    <div class="who">{% avatar k.student %}<div><b>{{ k.student.display_name }}</b><small>{% if k.cls %}{{ k.cls }}{% else %}Not in a class yet{% endif %}</small></div></div>
+    <div style="margin-top:14px"><div class="bar"><i style="width:{{ k.pct }}%"></i></div>
+      <small class="muted">{{ k.done }} of {{ k.total }} lessons · {{ k.n_courses }} subject{{ k.n_courses|pluralize }}</small></div>
+  </a>
+  {% empty %}
+  <div class="card empty">No student is linked to your account yet. Please contact the school office.</div>
+  {% endfor %}
+</div>
+{% if ch_kids %}<div class="card" style="margin-top:20px"><div class="ch-head"><h2>Lesson progress</h2></div><div class="chart" data-chart='{{ ch_kids }}'></div></div>{% endif %}
+{% endblock %}

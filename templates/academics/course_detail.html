@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ course }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ course.subject }}</h1>
+    <p class="muted">{{ course.school_class }} · {{ course.teacher.display_name|default:"No teacher assigned" }}</p>
+    {% if course.description %}<p>{{ course.description }}</p>{% endif %}</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if user.is_super_admin %}<a class="btn ghost" href="{% url 'academics:class_detail' course.school_class_id %}">Back to class</a>
+    {% else %}<a class="btn ghost" href="{% url 'academics:my_courses' %}">My courses</a>{% endif %}
+    {% if manage %}<a class="btn ghost" href="{% url 'assessments:gradebook' course.pk %}">{% icon "chart" 18 %} Gradebook</a>
+    <a class="btn ghost" href="{% url 'assessments:create' course.pk %}">{% icon "clipboard" 18 %} New assessment</a>
+    <a class="btn" href="{% url 'academics:lesson_create' course.pk %}">{% icon "plus" 18 %} Add lesson</a>{% endif %}
+  </div>
+</div>
+
+{% if manage %}
+<div class="grid g2" style="align-items:start">
+  <div class="card">
+    <h2>Lessons</h2>
+    {% for l in lessons %}
+    <div class="lesson-row">
+      <span class="num">{{ forloop.counter }}</span>
+      <div class="grow"><a href="{% url 'academics:lesson_view' l.pk %}">{{ l.title }}</a><br>
+        <small class="muted">{{ l.get_kind_display }}{% if not l.is_published %} · <b>Draft</b>{% endif %}</small></div>
+      <a class="btn ghost sm" href="{% url 'academics:lesson_edit' l.pk %}">{% icon "edit" 16 %}</a>
+      <form method="post" action="{% url 'academics:lesson_delete' l.pk %}" class="inline" onsubmit="return confirm('Delete this lesson?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+    </div>
+    {% empty %}<p class="empty">No lessons yet. Add your first lesson.</p>{% endfor %}
+  </div>
+  <div class="card">
+    <h2>Student progress</h2>
+    <div class="table-wrap"><table>
+      {% for r in student_rows %}
+      <tr><td><b>{{ r.student.display_name }}</b></td>
+        <td style="width:40%"><div class="bar"><i style="width:{{ r.pct }}%"></i></div></td>
+        <td class="muted">{{ r.done }}/{{ r.total }}</td></tr>
+      {% empty %}<tr><td class="empty">No students in this class.</td></tr>{% endfor %}
+    </table></div>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+    <h2 style="margin:0">Lessons</h2>
+    <div style="min-width:200px"><div class="bar"><i style="width:{{ progress.pct }}%"></i></div><small class="muted">{{ progress.done }} of {{ progress.total }} complete · {{ progress.pct }}%</small></div>
+  </div>
+  {% for r in lessons %}
+  <div class="lesson-row {% if r.done %}done{% endif %}">
+    <span class="num">{% if r.done %}{% icon "check" 16 %}{% else %}{{ forloop.counter }}{% endif %}</span>
+    <div class="grow"><a href="{% url 'academics:lesson_view' r.lesson.pk %}">{{ r.lesson.title }}</a><br><small class="muted">{{ r.lesson.get_kind_display }}</small></div>
+    <a class="btn ghost sm" href="{% url 'academics:lesson_view' r.lesson.pk %}">{% if r.done %}Review{% else %}Start{% endif %}</a>
+  </div>
+  {% empty %}<p class="empty">Your teacher has not published lessons yet.</p>{% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Assessments</h2>
+  {% for a in assessments %}
+  <div class="lesson-row"><div class="grow"><a href="{% if manage %}{% url 'assessments:detail' a.pk %}{% else %}{% url 'assessments:list' %}{% endif %}">{{ a.title }}</a><br>
+    <small class="muted">{{ a.get_kind_display }}{% if manage and not a.is_published %} · <b>Draft</b>{% endif %}</small></div></div>
+  {% empty %}<p class="empty">No assessments yet.</p>{% endfor %}
+</div>
+{% endblock %}

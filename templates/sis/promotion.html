@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Class promotion{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class promotion</h1><p class="muted">Move students to the next class at year end. Past results, fees and attendance stay with the student. Every move is logged.</p></div></div>
+<form method="get" class="toolbar"><select class="select" name="from" style="max-width:260px" onchange="this.form.submit()"><option value="">From class…</option>{% for c in classes %}<option value="{{ c.pk }}" {% if src and src.pk == c.pk %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></form>
+{% if src %}<form method="post" class="card">{% csrf_token %}<input type="hidden" name="from" value="{{ src.pk }}">
+  <label>Promote to<select class="select" name="to" required style="max-width:260px"><option value="">Choose class…</option>{% for c in classes %}{% if c.pk != src.pk %}<option value="{{ c.pk }}">{{ c }}</option>{% endif %}{% endfor %}</select></label>
+  <div class="table-wrap"><table><thead><tr><th style="width:40px"><input type="checkbox" checked onclick="document.querySelectorAll('.pr').forEach(c=>c.checked=this.checked)" aria-label="All"></th><th>Student</th></tr></thead>
+    {% for s in students %}<tr><td><input class="pr" type="checkbox" name="student" value="{{ s.pk }}" checked aria-label="{{ s.display_name }}"></td><td>{{ s.display_name }}</td></tr>{% empty %}<tr><td colspan="2" class="empty">No active students in this class.</td></tr>{% endfor %}</table></div>
+  {% if students %}<button class="btn" style="margin-top:10px" onclick="return confirm('Move the selected students?')">Promote selected</button>{% endif %}</form>{% endif %}
+{% endblock %}

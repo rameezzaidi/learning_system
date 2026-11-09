@@ -1,0 +1,26 @@
+{% load ui %}
+<section class="paper" id="page-{{ page_no }}">
+  <header class="rpt-head">
+    <div class="rpt-top"><b class="rpt-school">{{ meta.school }}</b><span>{{ meta.printed_at }}</span></div>
+    <div class="rpt-title">{{ meta.title }}</div>
+    <div class="rpt-filters">{{ meta.filters }}</div>
+  </header>
+  <table class="rpt">
+    <colgroup>{% for c in columns %}<col style="width:{{ c.pct }}%">{% endfor %}</colgroup>
+    <thead><tr>{% for c in columns %}<th class="{{ c.align }}">{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for ln in lines %}
+      {% if ln.t == "g" %}
+        <tr class="g g{{ ln.depth }}"><td colspan="{{ columns|length }}"><span>{{ ln.label }}</span> <small>{% if ln.cont %}(continued){% else %}({{ ln.count }}){% endif %}</small></td></tr>
+      {% elif ln.t == "d" %}
+        <tr class="d">{% for c in columns %}<td class="{{ c.align }}{% if c.key == 'status' and not ln.row.active %} off{% endif %}">{{ ln.row|get:c.key }}</td>{% endfor %}</tr>
+      {% elif ln.t == "s" %}
+        <tr class="s"><td colspan="{{ columns|length }}">{{ ln.label }} total: <b>{{ ln.count }}</b> <small>(active {{ ln.active }})</small></td></tr>
+      {% else %}
+        <tr class="grand"><td colspan="{{ columns|length }}">Grand total: <b>{{ ln.count }}</b> students &middot; {{ ln.active }} active &middot; {{ ln.inactive }} inactive &middot; {{ ln.oracle }} from Oracle &middot; {{ ln.manual }} manual{% if not count %} &mdash; no records match the filters{% endif %}</td></tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  <footer class="rpt-foot"><span>Printed by {{ meta.printed_by }}</span><span><b>Page {{ page_no }} of {{ total_pages }}</b></span><span>{{ meta.school }}</span></footer>
+</section>

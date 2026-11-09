@@ -1,0 +1,101 @@
+{% load ui %}
+{% if lesson.content %}<div class="prose" style="margin-bottom:14px">{{ lesson.content }}</div>{% endif %}
+<div id="game" class="game" data-done-url="{% if user.is_student %}{% url 'academics:item_done' lesson.pk %}{% endif %}" data-done="{% if done %}1{% endif %}">{% csrf_token %}
+  <div class="game-top"><b id="g-title"></b><span id="g-status" class="muted"></span></div>
+  <div id="g-stage"></div>
+  <div id="g-end" class="game-end" hidden><h3>🎉 Well done!</h3><p class="muted" id="g-endtxt"></p><button class="btn ghost" id="g-restart" type="button">Play again</button></div>
+</div>
+{{ game|json_script:"game-data" }}
+<script>
+(function () {
+  var cfg = JSON.parse(document.getElementById("game-data").textContent);
+  var root = document.getElementById("game"), stage = document.getElementById("g-stage"),
+      status = document.getElementById("g-status"), endBox = document.getElementById("g-end"), endTxt = document.getElementById("g-endtxt");
+  document.getElementById("g-title").textContent = {flashcards: "Flashcards", memory: "Memory match", scramble: "Word scramble"}[cfg.type] || "Activity";
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function finish(msg) {
+    stage.innerHTML = ""; status.textContent = ""; endTxt.textContent = msg; endBox.hidden = false;
+    var url = root.dataset.doneUrl;
+    if (url) {
+      var tok = root.querySelector("[name=csrfmiddlewaretoken]").value;
+      fetch(url, {method: "POST", headers: {"X-CSRFToken": tok}}).then(function (r) { return r.json(); }).then(function (j) {
+        status.textContent = "✓ Saved to your progress";
+        var ab = document.querySelector(".autodone"); if (ab) ab.innerHTML = '<span class="badge student">✓ Completed</span>';
+        var on = document.querySelector(".pitem.on"); if (on) { on.classList.add("done"); on.querySelector(".tick").textContent = "✓"; }
+        var bar = document.querySelector(".pside .bar i"); if (bar && j.progress) { bar.style.width = j.progress.pct + "%";
+          var t = bar.parentNode.nextElementSibling; if (t) t.textContent = j.progress.pct + "% complete"; }
+      });
+    }
+  }
+  function start() {
+    endBox.hidden = true; stage.innerHTML = "";
+    if (!cfg.items.length) { stage.textContent = "This activity has no content yet."; return; }
+    ({flashcards: flashcards, memory: memory, scramble: scramble}[cfg.type] || function () {})();
+  }
+  document.getElementById("g-restart").onclick = start;
+
+  function flashcards() {
+    var queue = shuffle(cfg.items), total = queue.length, known = 0, flipped = false;
+    var card = el("div", "fcard"), face = el("div", "fface"), btns = el("div", "game-btns");
+    var again = el("button", "btn ghost", "Need practice"), got = el("button", "btn", "I know this");
+    again.type = got.type = "button"; btns.append(again, got); card.append(face); stage.append(card, btns);
+    function show() {
+      if (!queue.length) return finish("You went through all " + total + " cards.");
+      flipped = false; face.textContent = queue[0][0]; card.classList.remove("back");
+      status.textContent = known + " / " + total + " known · tap the card to flip";
+    }
+    card.onclick = function () { flipped = !flipped; face.textContent = queue[0][flipped ? 1 : 0]; card.classList.toggle("back", flipped); };
+    got.onclick = function () { queue.shift(); known++; show(); };
+    again.onclick = function () { queue.push(queue.shift()); show(); };
+    show();
+  }
+
+  function memory() {
+    var cards = []; cfg.items.forEach(function (p, i) { cards.push({id: i, t: p[0]}); cards.push({id: i, t: p[1]}); });
+    cards = shuffle(cards); var grid = el("div", "mgrid"), open = [], moves = 0, matched = 0, lock = false;
+    stage.append(grid);
+    cards.forEach(function (c) {
+      var b = el("button", "mcard"); b.type = "button"; b.append(el("span", "mback", "?"), el("span", "mface", c.t));
+      b.onclick = function () {
+        if (lock || b.classList.contains("up") || b.classList.contains("ok")) return;
+        b.classList.add("up"); open.push([b, c]);
+        if (open.length === 2) {
+          moves++; lock = true; var a = open[0], d = open[1]; open = [];
+          if (a[1].id === d[1].id) { a[0].classList.add("ok"); d[0].classList.add("ok"); matched++; lock = false;
+            if (matched === cfg.items.length) finish("Matched all " + matched + " pairs in " + moves + " moves."); }
+          else setTimeout(function () { a[0].classList.remove("up"); d[0].classList.remove("up"); lock = false; }, 900);
+        }
+        status.textContent = "Moves: " + moves + " · Pairs: " + matched + " / " + cfg.items.length;
+      };
+      grid.append(b);
+    });
+    status.textContent = "Find the matching pairs";
+  }
+
+  function scramble() {
+    var words = shuffle(cfg.items), i = 0, score = 0;
+    var hint = el("p", "muted"), tiles = el("div", "tiles"), input = el("input", "input"), row = el("div", "game-btns"),
+        check = el("button", "btn", "Check"), skip = el("button", "btn ghost", "Skip"), msg = el("p", "gmsg");
+    input.placeholder = "Type the word"; input.autocomplete = "off"; check.type = skip.type = "button";
+    row.append(skip, check); stage.append(tiles, hint, input, row, msg);
+    function scr(w) { var l = w.split(""), s = l.join(""), n = 0; do { l = shuffle(l); n++; } while (l.join("") === w && w.length > 1 && n < 10); return l; }
+    function show() {
+      if (i >= words.length) return finish("You solved " + score + " of " + words.length + " words.");
+      var w = words[i][0]; tiles.innerHTML = ""; scr(w).forEach(function (ch) { tiles.append(el("span", "tile", ch.toUpperCase())); });
+      hint.textContent = words[i][1] ? "Hint: " + words[i][1] : ""; input.value = ""; msg.textContent = "";
+      status.textContent = "Word " + (i + 1) + " of " + words.length + " · Score " + score; input.focus();
+    }
+    function submit() {
+      var ok = input.value.trim().toLowerCase() === words[i][0].toLowerCase();
+      if (ok) { score++; msg.textContent = "✓ Correct!"; msg.className = "gmsg ok"; i++; setTimeout(show, 600); }
+      else { msg.textContent = "Not quite — try again."; msg.className = "gmsg bad"; }
+    }
+    check.onclick = submit; input.onkeydown = function (e) { if (e.key === "Enter") { e.preventDefault(); submit(); } };
+    skip.onclick = function () { i++; show(); };
+    show();
+  }
+  if (root.dataset.done) status.textContent = "✓ Completed — you can play again any time";
+  start();
+})();
+</script>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Audit log</h1><p class="muted">Sign-ins, user changes, permission changes, result publishing and exports. Entries cannot be edited.</p></div></div>
+<form class="toolbar" method="get">
+  <input class="input" style="max-width:220px" name="q" value="{{ q }}" placeholder="Username">
+  <select class="select" style="max-width:220px" name="action"><option value="">All actions</option>
+    {% for a in actions %}<option value="{{ a }}" {% if a == action %}selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+  <button class="btn ghost">Filter</button>
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>When</th><th>User</th><th>Action</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
+  {% for e in page_obj %}
+  <tr><td>{{ e.created_at|date:"d M Y H:i:s" }}</td><td>{{ e.username|default:"—" }}</td><td><span class="badge {% if e.action == 'login.failed' %}off{% endif %}">{{ e.action }}</span></td>
+    <td>{{ e.target }}</td><td>{{ e.detail }}</td><td>{{ e.ip|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">Nothing recorded yet.</td></tr>{% endfor %}
+</table></div>
+<div class="pager">{% if page_obj.has_previous %}<a class="btn ghost sm" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&action={{ action }}">Previous</a>{% endif %}
+  <small class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
+  {% if page_obj.has_next %}<a class="btn ghost sm" href="?page={{ page_obj.next_page_number }}&q={{ q }}&action={{ action }}">Next</a>{% endif %}</div>
+{% endblock %}

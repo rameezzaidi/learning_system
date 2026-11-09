@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ lesson.title }}{% endblock %}
+{% block content %}
+<div class="player">
+  <aside class="pside">
+    <a class="pback" href="{% url 'academics:course_detail' course.pk %}">&larr; {{ course.subject }}</a>
+    {% if progress %}<div class="bar" style="margin:8px 0 2px"><i style="width:{{ progress.pct }}%"></i></div><small class="muted">{{ progress.pct }}% complete</small>{% endif %}
+    {% for m in outline %}
+    <details class="psec" {% if m.module.pk == lesson.module_id %}open{% endif %}>
+      <summary><b>{{ m.module.title }}</b>{% if not m.module.is_published %} <span class="badge">Hidden</span>{% endif %}<small class="muted">{{ m.done }}/{{ m.total }}</small></summary>
+      {% for i in m.items %}
+      <a class="pitem {% if i.lesson.pk == lesson.pk %}on{% endif %} {% if i.done %}done{% endif %}" href="{% url 'academics:lesson_view' i.lesson.pk %}">
+        <span class="tick">{% if i.done %}{% icon "check" 12 %}{% endif %}</span>{{ i.lesson.title|truncatechars:34 }}</a>
+      {% endfor %}
+    </details>
+    {% endfor %}
+  </aside>
+
+  <main class="pmain">
+    <div class="page-head" style="margin-bottom:14px"><div>
+      <small class="muted">{{ lesson.module.title }} · Item {{ pos }} of {{ n_items }}</small>
+      <h1 style="margin:2px 0 0">{{ lesson.title }}</h1>
+      <p class="muted" style="margin:4px 0 0">{% icon lesson.kind|kind_icon 16 %} {{ lesson.get_kind_display }}{% if lesson.minutes %} · {{ lesson.minutes }} min{% endif %}{% if not lesson.is_published %} · <b>Draft</b>{% endif %}</p></div>
+      {% if manage %}<a class="btn ghost" href="{% url 'academics:lesson_edit' lesson.pk %}">{% icon "edit" 16 %} Edit</a>{% endif %}</div>
+
+    <div class="card">
+      {% include "academics/items/"|add:lesson.kind|add:".html" %}
+
+      {% if user.is_student %}<p class="autodone">{% if done %}<span class="badge student">{% icon "check" 14 %} Completed</span>{% else %}<span class="muted"><small>Completes automatically when you finish.</small></span>{% endif %}</p>{% endif %}
+
+      <div class="pager">
+        {% if prev %}<a class="btn ghost" href="{% url 'academics:lesson_view' prev.pk %}">&larr; {{ prev.title|truncatechars:28 }}</a>{% else %}<span></span>{% endif %}
+        {% if next %}<a class="btn {% if done %}{% else %}ghost{% endif %}" href="{% url 'academics:lesson_view' next.pk %}">{{ next.title|truncatechars:28 }} &rarr;</a>{% endif %}
+      </div>
+    </div>
+
+    {% if user.is_student %}
+    <div class="card" id="help">
+      <h3 style="margin-top:0">{% icon "help" 18 %} Ask your teacher about this item</h3>
+      {% for h in my_help %}<div class="lesson-row"><div class="grow"><a href="{% url 'academics:help_thread' h.pk %}">{{ h.subject }}</a></div>
+        <span class="badge {% if h.status == 'answered' %}student{% endif %}">{{ h.get_status_display }}</span></div>{% endfor %}
+      {% include "academics/_help_form.html" %}
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

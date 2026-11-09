@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Teacher attendance{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Teacher attendance · {{ day|date:"d M Y" }}</h1><p class="muted">Last 30 days percentage shown beside each teacher.</p></div>
+  <form method="get"><input class="input" type="date" name="date" value="{{ day|date:'Y-m-d' }}" max="{{ today|default:day|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Date"></form></div>
+<form method="post" class="card">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+  <div class="table-wrap"><table class="att-table"><thead><tr><th>Teacher</th><th>Status</th><th>30-day</th></tr></thead>
+    {% for r in rows %}<tr><td><div class="who">{% avatar r.teacher %}<div><b>{{ r.teacher.display_name }}</b><small>{{ r.teacher.campus.name|default:"" }}</small></div></div></td>
+      <td><div class="seg">{% for v, l in statuses %}<label class="seg-{{ v }}"><input type="radio" name="t{{ r.teacher.pk }}" value="{{ v }}" {% if r.status == v or not r.status and v == 'present' %}checked{% endif %}><span>{{ l }}</span></label>{% endfor %}</div></td>
+      <td>{% if r.pct is not None %}{{ r.pct }}%{% else %}—{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="3" class="empty">No teachers in your scope.</td></tr>{% endfor %}
+  </table></div>
+  {% if rows %}<div style="margin-top:12px"><button class="btn">{% icon "check" 18 %} Save</button></div>{% endif %}
+</form>
+{% endblock %}

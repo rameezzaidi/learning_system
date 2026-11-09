@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Class fees{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class fees</h1><p class="muted">Monthly fee per class. Individual students can have their own amount or discount on their ledger page. Empty = no fee.</p></div><a class="btn ghost" href="{% url 'fees:dashboard' %}">Back</a></div>
+<form method="post" class="card table-wrap">{% csrf_token %}<table>
+  <thead><tr><th>Class</th><th>Campus</th><th style="width:220px">Monthly fee ({{ school.currency }})</th></tr></thead>
+  {% for c, amt in rows %}<tr><td><b>{{ c }}</b></td><td>{{ c.campus.name|default:"Whole school" }}</td>
+    <td><input class="input" type="number" min="0" step="0.01" name="c{{ c.pk }}" value="{{ amt }}" aria-label="Monthly fee for {{ c }}"></td></tr>
+  {% empty %}<tr><td colspan="3" class="empty">No classes yet.</td></tr>{% endfor %}
+</table><button class="btn" style="margin-top:12px">{% icon "check" 18 %} Save class fees</button></form>
+{% endblock %}

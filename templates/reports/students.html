@@ -1,0 +1,106 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Student Report{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Student Report</h1><p class="muted">Region → Campus → Students. Switch between a data table and a paged report.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn ghost" href="{% url 'reports:students_csv' %}?{{ qs_filters }}">Export CSV</a>
+    <a class="btn ghost" href="{% url 'reports:students_pdf' %}?{{ qs_filters }}{% if group %}&group={{ group }}{% endif %}" target="_blank">Download PDF</a>
+    {% if view == "report" %}<a class="btn" href="?{{ qs_nav }}&print=1" target="_blank">Print report</a>{% endif %}
+  </div>
+</div>
+
+<div class="tabs">
+  <a class="{% if view == 'table' %}on{% endif %}" href="?{{ qs_view_table }}&view=table">Table view</a>
+  <a class="{% if view == 'report' %}on{% endif %}" href="?{{ qs_view_table }}&view=report">Report view</a>
+</div>
+
+<form class="toolbar" method="get">
+  <input type="hidden" name="view" value="{{ view }}">
+  <input class="input" style="max-width:220px" name="q" value="{{ f.q }}" placeholder="Name, username, admission no">
+  <select class="select" style="max-width:150px" name="region">
+    <option value="">All regions</option>
+    {% for r in regions %}<option value="{{ r.pk }}" {% if f.region == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>{% endfor %}
+  </select>
+  <select class="select" style="max-width:220px" name="campus">
+    <option value="">All campuses</option>
+    <option value="none" {% if f.campus == "none" %}selected{% endif %}>— No campus —</option>
+    {% for c in campuses %}<option value="{{ c.pk }}" {% if f.campus == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.region.name }} › {{ c.name }}</option>{% endfor %}
+  </select>
+  <select class="select" style="max-width:120px" name="source">
+    <option value="">Any source</option>
+    <option value="oracle" {% if f.source == "oracle" %}selected{% endif %}>Oracle</option>
+    <option value="manual" {% if f.source == "manual" %}selected{% endif %}>Manual</option>
+  </select>
+  <select class="select" style="max-width:120px" name="status">
+    <option value="">Any status</option>
+    <option value="active" {% if f.status == "active" %}selected{% endif %}>Active</option>
+    <option value="inactive" {% if f.status == "inactive" %}selected{% endif %}>Inactive</option>
+  </select>
+  {% if view == "report" %}
+  <select class="select" style="max-width:170px" name="group" title="Group by">
+    {% for k, label in groupings %}<option value="{{ k }}" {% if group == k %}selected{% endif %}>Group: {{ label }}</option>{% endfor %}
+  </select>
+  <select class="select" style="max-width:130px" name="rpp" title="Rows per page">
+    {% for n in report_sizes %}<option value="{{ n }}" {% if rpp == n %}selected{% endif %}>{{ n }} rows/page</option>{% endfor %}
+  </select>
+  {% else %}
+  <select class="select" style="max-width:120px" name="per_page" title="Rows per page">
+    {% for n in table_sizes %}<option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }} / page</option>{% endfor %}
+  </select>
+  {% endif %}
+  <button class="btn ghost">Apply</button>
+</form>
+
+{% if view == "table" %}
+<div class="card table-wrap">
+  <table>
+    <thead><tr>
+      {% for h in heads %}
+      <th><a class="sort {% if h.active %}on{% endif %}" href="?{{ qs_sort }}&sort={{ h.key }}&dir={{ h.next }}">{{ h.label }}{% if h.active %} {% if h.dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+      {% endfor %}
+    </tr></thead>
+    {% for u in page_obj %}
+    <tr>
+      <td><div class="who"><div class="avatar">{{ u|initials }}</div><div><b>{{ u.display_name }}</b><small>@{{ u.username }}</small></div></div></td>
+      <td>{{ u.student_profile.admission_no|default:"—" }}</td>
+      <td>{{ u.student_profile.campus.region.name|default:"—" }}</td>
+      <td>{{ u.student_profile.campus.name|default:"—" }}</td>
+      <td>{% if u.is_active %}<span class="badge student">Active</span>{% else %}<span class="badge off">Inactive</span>{% endif %}</td>
+      <td>{% if u.student_profile.is_external %}<span class="badge teacher">Oracle</span>{% else %}<span class="badge">Manual</span>{% endif %}</td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="empty">No students match these filters.</td></tr>{% endfor %}
+  </table>
+  <div class="grid-foot">
+    <span class="muted">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }}</span>
+    {% include "partials/pager.html" %}
+    <form method="get" class="goto">{% for k, v in hidden %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <label class="muted">Go to</label><input class="input" type="number" name="page" min="1" max="{{ page_obj.paginator.num_pages }}" value="{{ page_obj.number }}"><button class="btn ghost sm">Go</button></form>
+  </div>
+</div>
+
+{% else %}
+<div class="viewer">
+  <div class="viewer-bar">
+    <a class="vb {% if current == 1 %}off{% endif %}" href="?{{ qs_nav }}&page=1" title="First page">|&lsaquo;</a>
+    <a class="vb {% if current == 1 %}off{% endif %}" href="?{{ qs_nav }}&page={{ current|add:'-1' }}" title="Previous page">&lsaquo;</a>
+    <form method="get" class="goto">{% for k, v in hidden %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+      <span>Page</span><input class="input" type="number" name="page" min="1" max="{{ total_pages }}" value="{{ current }}"><span>of <b>{{ total_pages }}</b></span></form>
+    <a class="vb {% if current == total_pages %}off{% endif %}" href="?{{ qs_nav }}&page={{ current|add:'1' }}" title="Next page">&rsaquo;</a>
+    <a class="vb {% if current == total_pages %}off{% endif %}" href="?{{ qs_nav }}&page={{ total_pages }}" title="Last page">&rsaquo;|</a>
+    <span class="muted vb-info">{{ count }} student{{ count|pluralize }}</span>
+  </div>
+  <div class="viewer-body">
+    <aside class="toc">
+      <h3>Group tree</h3>
+      {% for t in toc %}
+        <a class="toc-item d{{ t.depth }}" href="?{{ qs_nav }}&page={{ t.page }}"><span>{{ t.label }}</span><small>{{ t.count }} · p.{{ t.page }}</small></a>
+      {% empty %}<p class="muted" style="margin:0">No groups.</p>{% endfor %}
+    </aside>
+    <div class="paper-wrap">
+      {% for page_no, lines in pages_to_show %}{% include "reports/_paper.html" %}{% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

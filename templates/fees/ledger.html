@@ -1,0 +1,47 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Fee ledger{% endblock %}
+{% block content %}
+{% with cur=school.currency %}
+<div class="page-head"><div class="who">{% avatar student %}<div><h1 style="margin:0">{{ student.display_name }}</h1><p class="muted" style="margin:0">Fee ledger{% if student.student_profile.admission_no %} · {{ student.student_profile.admission_no }}{% endif %}</p></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap" class="no-print">
+    {% if kids|length > 1 %}<select class="select" style="max-width:200px" aria-label="Switch child" onchange="location.href='/fees/student/'+this.value+'/'">{% for k in kids %}<option value="{{ k.pk }}" {% if k.pk == student.pk %}selected{% endif %}>{{ k.display_name }}</option>{% endfor %}</select>{% endif %}
+    {% if user.is_parent %}<a class="btn ghost" href="{% url 'organization:family' student.pk %}">Overview</a>{% else %}<a class="btn ghost" href="{% url 'organization:student_profile' student.pk %}">Profile</a>{% endif %}
+    <button class="btn ghost" onclick="window.print()">Print</button></div></div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:{% if s.balance > 0 %}#f43f5e{% else %}#10b981{% endif %}"><span class="kpi-ic">{% icon "clipboard" 22 %}</span><b>{{ cur }} {{ s.balance|floatformat:"-2g" }}</b><span class="kpi-l">{% if s.balance < 0 %}Advance (credit){% else %}Outstanding{% endif %}</span></div>
+  <div class="kpi" style="--h:var(--primary)"><span class="kpi-ic">{% icon "calendar" 22 %}</span><b>{% if s.monthly is not None %}{{ cur }} {{ s.monthly|floatformat:"-2g" }}{% else %}—{% endif %}</b><span class="kpi-l">Monthly fee</span>
+    <small>{% if s.plan and s.plan.discount %}after {{ cur }} {{ s.plan.discount|floatformat:"-2g" }} discount{% elif s.monthly is None %}No fee set{% endif %}</small></div>
+  <div class="kpi" style="--h:#10b981"><span class="kpi-ic">{% icon "check" 22 %}</span><b>{% if s.last_payment %}{{ cur }} {{ s.last_payment.credit|floatformat:"-2g" }}{% else %}—{% endif %}</b><span class="kpi-l">Last payment</span><small>{% if s.last_payment %}{{ s.last_payment.entry_date|date:"d M Y" }}{% else %}None yet{% endif %}</small></div>
+  <div class="kpi" style="--h:#8b5cf6"><span class="kpi-ic">{% icon "user" 22 %}</span><b>{{ s.plan.is_active|yesno:"Active,Stopped,Not started" }}</b><span class="kpi-l">Billing</span><small>{% if s.plan %}from {{ s.plan.start_month|date:"M Y" }}{% endif %}</small></div>
+</div>
+<div class="split" style="margin-top:16px"><div>
+  <div class="card table-wrap"><h2 style="margin:0 0 8px">Ledger</h2><table>
+    <thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Charged</th><th style="text-align:right">Paid</th><th style="text-align:right">Balance</th><th class="no-print"></th></tr></thead>
+    {% for r in rows %}{% with e=r.e %}<tr {% if e.is_void %}style="opacity:.55;text-decoration:line-through"{% endif %}>
+      <td>{{ e.entry_date|date:"d M Y" }}</td>
+      <td>{{ e.description|default:e.get_kind_display }}{% if e.receipt_no %} <small class="muted">{{ e.receipt_no }}</small>{% endif %}{% if e.method %} <small class="muted">· {{ e.get_method_display }}{% if e.reference %} {{ e.reference }}{% endif %}</small>{% endif %}
+        {% if e.is_void %}<br><small>Voided: {{ e.void_reason }}</small>{% endif %}</td>
+      <td style="text-align:right">{% if e.debit %}{{ e.debit|floatformat:"-2g" }}{% endif %}</td>
+      <td style="text-align:right">{% if e.credit %}{{ e.credit|floatformat:"-2g" }}{% endif %}</td>
+      <td style="text-align:right"><b>{{ r.balance|floatformat:"-2g" }}</b></td>
+      <td class="no-print">{% if e.kind == 'payment' and not e.is_void %}<a class="btn ghost sm" href="{% url 'fees:receipt' e.pk %}">Receipt</a>{% endif %}
+        {% if can_manage and not e.is_void %}<form method="post" action="{% url 'fees:void' e.pk %}" class="inline" onsubmit="var r=prompt('Reason for voiding this entry?');if(!r)return false;this.reason.value=r;return true;">{% csrf_token %}<input type="hidden" name="reason"><button class="btn ghost sm" aria-label="Void entry">Void</button></form>{% endif %}</td></tr>{% endwith %}
+    {% empty %}<tr><td colspan="6" class="empty">No entries yet. Monthly fees appear once a class fee or student plan is set.</td></tr>{% endfor %}
+  </table></div>
+</div>
+<aside class="no-print">
+  {% if can_collect %}<div class="card"><h2>Record payment</h2>
+    <form method="post" action="{% url 'fees:pay' student.pk %}">{% csrf_token %}
+      {% include "partials/field.html" with field=pay_form.amount %}{% include "partials/field.html" with field=pay_form.method %}{% include "partials/field.html" with field=pay_form.entry_date %}
+      {% include "partials/field.html" with field=pay_form.reference %}{% include "partials/field.html" with field=pay_form.note %}
+      <button class="btn">{% icon "check" 18 %} Save payment</button></form></div>{% endif %}
+  {% if can_manage %}
+  <div class="card" style="margin-top:12px"><h2>Fee plan</h2><p class="muted"><small>Class fee: {% if class_fee is not None %}{{ cur }} {{ class_fee|floatformat:"-2g" }}{% else %}not set{% endif %}</small></p>
+    <form method="post" action="{% url 'fees:plan' student.pk %}">{% csrf_token %}
+      {% for f in plan_form %}{% include "partials/field.html" with field=f %}{% endfor %}<button class="btn ghost">Save plan</button></form></div>
+  <div class="card" style="margin-top:12px"><h2>Add charge / discount</h2>
+    <form method="post" action="{% url 'fees:entry' student.pk %}">{% csrf_token %}{% for f in entry_form %}{% include "partials/field.html" with field=f %}{% endfor %}<button class="btn ghost">Add</button></form></div>
+  {% endif %}
+</aside></div>
+{% endwith %}
+{% endblock %}

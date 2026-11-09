@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Register · {{ cls }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ cls }} · {{ day|date:"l, d M Y" }}</h1><p class="muted">{% if saved %}Saved earlier. You can still correct it.{% else %}Everyone starts as Present. Change only the exceptions.{% endif %}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <a class="btn ghost sm" href="?date={{ prev|date:'Y-m-d' }}">← Previous</a>
+    {% if day < today %}<a class="btn ghost sm" href="?date={{ next|date:'Y-m-d' }}">Next →</a>{% endif %}
+    <form method="get"><input class="input" type="date" name="date" value="{{ day|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Date"></form>
+  </div></div>
+{% if holiday %}<div class="card" style="margin-bottom:12px"><b>{{ holiday.title }}</b> is marked as a holiday on this date. Mark attendance only if school was open.</div>
+{% elif weekend %}<div class="card" style="margin-bottom:12px">This date is a Sunday.</div>{% endif %}
+<form method="post" class="card">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+  <div class="att-tools"><button type="button" class="btn ghost sm" data-all="present">All present</button><button type="button" class="btn ghost sm" data-all="absent">All absent</button></div>
+  <div class="table-wrap"><table class="att-table">
+    <thead><tr><th>Student</th><th>Status</th><th>Note</th></tr></thead>
+    {% for r in rows %}<tr>
+      <td><div class="who">{% avatar r.student %}<div><b>{{ r.student.display_name }}</b>{% if r.on_leave %}<small>Approved leave</small>{% endif %}</div></div></td>
+      <td><div class="seg">{% for v, l in statuses %}<label class="seg-{{ v }}"><input type="radio" name="s{{ r.student.pk }}" value="{{ v }}" {% if r.status == v or not r.status and v == 'present' %}checked{% endif %}><span>{{ l }}</span></label>{% endfor %}</div></td>
+      <td><input class="input" name="n{{ r.student.pk }}" value="{{ r.note }}" maxlength="160" placeholder="Optional" aria-label="Note for {{ r.student.display_name }}"></td></tr>
+    {% empty %}<tr><td colspan="3" class="empty">No students are enrolled in this class.</td></tr>{% endfor %}
+  </table></div>
+  {% if rows %}<div style="margin-top:12px"><button class="btn">{% icon "check" 18 %} Save attendance</button> <a class="btn ghost" href="{% url 'attendance:index' %}">Back</a></div>{% endif %}
+</form>
+<script>document.querySelectorAll('[data-all]').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.att-table input[value="'+b.dataset.all+'"]').forEach(function(i){i.checked=true})})})</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Assessments{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Assessments</h1><p class="muted">Quizzes, tests and exams for your courses.</p></div>
+  <a class="btn ghost" href="{% url 'assessments:gradebook_index' %}">{% icon "chart" 18 %} Gradebook</a></div>
+<div class="card">
+  <h3 style="margin-top:0">Create new</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% for c in courses %}<a class="btn ghost sm" href="{% url 'assessments:create' c.pk %}">{% icon "plus" 16 %} {{ c.subject }} · {{ c.school_class }}</a>
+    {% empty %}<span class="muted">No courses yet.</span>{% endfor %}
+  </div>
+</div>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Title</th><th>Course</th><th>Type</th><th>Questions</th><th>Status</th><th></th></tr></thead>
+  {% for a in items %}
+  <tr><td><b>{{ a.title }}</b></td><td>{{ a.course.subject }} · {{ a.course.school_class }}</td><td>{{ a.get_kind_display }}</td>
+    <td>{{ a.questions.count }}</td>
+    <td>{% if a.is_published %}<span class="badge student">Published</span>{% else %}<span class="badge">Draft</span>{% endif %}</td>
+    <td style="text-align:right"><a class="btn ghost sm" href="{% url 'assessments:detail' a.pk %}">Open</a></td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No assessments yet. Pick a course above to create one.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

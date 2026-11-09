@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Permissions{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Roles &amp; permissions</h1>
+  <p class="muted">Tick what each role may do. Super Admin always has everything. Data scope is separate: Regional Directors only see their region, Principals only their campus. A dot (•) marks a change from the default.</p></div></div>
+<form method="post">{% csrf_token %}
+{% for g in groups %}
+<div class="card table-wrap" style="margin-bottom:16px">
+  <h2 style="margin:0 0 8px">{{ g.module }}</h2>
+  <table class="perm-table">
+    <thead><tr><th>Permission</th>{% for r, lbl in roles %}<th style="text-align:center">{{ lbl }}</th>{% endfor %}</tr></thead>
+    {% for it in g.items %}
+    <tr><td>{{ it.label }} <small class="muted">{{ it.code }}</small></td>
+      {% for role, on, default in it.cells %}
+      <td style="text-align:center"><label class="perm-cell"><input type="checkbox" name="{{ role }}|{{ it.code }}" {% if on %}checked{% endif %} aria-label="{{ it.label }} for {{ role }}">{% if on != default %}<b title="Changed from default">•</b>{% endif %}</label></td>
+      {% endfor %}
+    </tr>{% endfor %}
+  </table>
+</div>
+{% endfor %}
+<button class="btn">{% icon "check" 18 %} Save permissions</button>
+</form>
+{% endblock %}

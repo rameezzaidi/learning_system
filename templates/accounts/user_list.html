@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Users &amp; Roles</h1><p class="muted">Create and manage Teachers, Students and Parents.</p></div>
+  <a class="btn" href="{% url 'accounts:user_create' %}">{% icon "plus" 18 %} Add user</a>
+</div>
+
+<form class="toolbar" method="get">
+  <input class="input" style="max-width:260px" name="q" value="{{ q }}" placeholder="Search name, username, email">
+  <select class="select" style="max-width:200px" name="role" onchange="this.form.submit()">
+    <option value="">All roles</option>
+    {% for v, l in roles %}<option value="{{ v }}" {% if v == role %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="btn ghost">Filter</button>
+</form>
+
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>User</th><th>Role</th><th>Linked students</th><th>Status</th><th></th></tr></thead>
+    {% for u in users %}
+    <tr>
+      <td><div class="who"><div class="avatar">{{ u|initials }}</div><div><b>{{ u.display_name }}</b><small>@{{ u.username }}{% if u.email %} · {{ u.email }}{% endif %}</small></div></div></td>
+      <td><span class="badge {{ u.role }}">{{ u.get_role_display }}</span></td>
+      <td>{% for c in u.children.all %}{{ c.display_name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">—</span>{% endfor %}</td>
+      <td>{% if u.is_active %}<span class="badge student">Active</span>{% else %}<span class="badge off">Inactive</span>{% endif %}</td>
+      <td><div class="actions">
+        <a class="btn ghost sm" href="{% url 'accounts:user_edit' u.pk %}">{% icon "edit" 16 %} Edit</a>
+        {% if u.pk != user.pk %}
+        <form method="post" action="{% url 'accounts:user_toggle' u.pk %}">{% csrf_token %}
+          <button class="btn ghost sm" title="Activate / deactivate">{% icon "power" 16 %}</button></form>
+        {% endif %}
+      </div></td>
+    </tr>
+    {% empty %}<tr><td colspan="5" class="empty">No users found.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

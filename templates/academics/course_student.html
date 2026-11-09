@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ course.subject }}{% endblock %}
+{% block content %}
+<section class="hero" style="{{ course.subject.name|cover }}">
+  <div class="hero-in">
+    <small>{{ course.school_class }}</small>
+    <h1>{{ course.subject }}</h1>
+    {% if course.description %}<p>{{ course.description }}</p>{% endif %}
+    <div class="hero-meta">
+      <span>{% icon "user" 16 %} {{ course.teacher.display_name|default:"Teacher not assigned" }}</span>
+      <span>{% icon "book" 16 %} {{ outline|length }} module{{ outline|length|pluralize }} · {{ n_items }} item{{ n_items|pluralize }}</span>
+      {% if minutes %}<span>{% icon "calendar" 16 %} ≈ {{ minutes|hours }}</span>{% endif %}
+    </div>
+    <div class="hero-act">
+      {% if continue_item %}<a class="btn light" href="{% url 'academics:lesson_view' continue_item.pk %}">
+        {% if progress.pct == 100 %}Review course{% elif started %}Continue learning{% else %}Start course{% endif %}</a>{% endif %}
+      <div class="hero-bar"><div class="bar"><i style="width:{{ progress.pct }}%"></i></div><small>{{ progress.done }} of {{ progress.total }} complete · {{ progress.pct }}%</small></div>
+    </div>
+  </div>
+</section>
+
+<div class="split">
+  <div>
+    <h2>Syllabus</h2>
+    {% for m in outline %}
+    <details class="syl" {% if forloop.first or m.pct < 100 and m.done %}open{% endif %}>
+      <summary><span class="mnum">{{ forloop.counter }}</span>
+        <span class="grow"><b>{{ m.module.title }}</b>{% if m.module.description %}<br><small class="muted">{{ m.module.description }}</small>{% endif %}</span>
+        <span class="mprog">{% if m.total and m.done == m.total %}{% icon "check" 16 %} Done{% else %}{{ m.done }}/{{ m.total }}{% endif %}</span></summary>
+      {% for i in m.items %}
+      <a class="sitem {% if i.done %}done{% endif %}" href="{% url 'academics:lesson_view' i.lesson.pk %}">
+        <span class="tick">{% if i.done %}{% icon "check" 14 %}{% endif %}</span>
+        <span class="grow">{{ i.lesson.title }}</span>
+        <small class="muted">{% icon i.lesson.kind|kind_icon 14 %} {{ i.lesson.get_kind_display|truncatechars:22 }}{% if i.lesson.minutes %} · {{ i.lesson.minutes }} min{% endif %}</small>
+      </a>
+      {% empty %}<p class="muted" style="margin:8px 16px"><small>No items yet.</small></p>{% endfor %}
+    </details>
+    {% empty %}<div class="card empty">Your teacher has not published any modules yet.</div>{% endfor %}
+  </div>
+
+  <aside>
+    <div class="card">
+      <h3 style="margin-top:0">Instructor</h3>
+      {% if course.teacher %}<div class="who"><div class="avatar">{{ course.teacher|initials }}</div><div><b>{{ course.teacher.display_name }}</b><small>{{ course.subject }} teacher</small></div></div>
+      {% else %}<p class="muted">Not assigned yet.</p>{% endif %}
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">{% icon "help" 18 %} Need help?</h3>
+      <p class="muted" style="margin-top:0">Stuck on something? Ask your teacher — you will get the answer here.</p>
+      {% include "academics/_help_form.html" %}
+    </div>
+    {% if assessments %}<div class="card"><h3 style="margin-top:0">Assessments</h3>
+      {% for a in assessments %}<div class="lesson-row"><div class="grow">{{ a.title }}<br><small class="muted">{{ a.get_kind_display }}</small></div></div>{% endfor %}
+      <a class="btn ghost sm" href="{% url 'assessments:list' %}">Open assessments</a></div>{% endif %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="welcome">
+  <div class="w-text"><p class="w-date">{% now "l, j F Y" %}</p><h1>Welcome, {{ user.first_name|default:user.username }}</h1>
+    <p class="w-sub">{{ user.get_role_display }} · {{ scope_label }}</p></div>
+  <div class="w-act"><a class="btn" href="{% url 'organization:compare' %}">{% icon "chart" 18 %} Compare campuses</a></div>
+</section>
+<div class="grid g4 kpis">
+  <a class="kpi" style="--h:var(--primary)" href="{% url 'organization:overview' %}"><span class="kpi-ic">{% icon "school" 22 %}</span><b>{{ tot.campuses }}</b><span class="kpi-l">Campuses</span></a>
+  <a class="kpi" style="--h:#10b981" href="{% url 'organization:student_list' %}"><span class="kpi-ic">{% icon "users" 22 %}</span><b>{{ tot.students }}</b><span class="kpi-l">Students</span><small>{{ tot.teachers }} teacher{{ tot.teachers|pluralize }}</small></a>
+  <div class="kpi" style="--h:#8b5cf6"><span class="kpi-ic">{% icon "chart" 22 %}</span><b>{% if tot.avg_pct is not None %}{{ tot.avg_pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Average exam %</span></div>
+  <div class="kpi" style="--h:#f43f5e"><span class="kpi-ic">{% icon "bell" 22 %}</span><b>{{ tot.at_risk }}</b><span class="kpi-l">Students at risk</span><small>latest result below 50%</small></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><div class="ch-head"><h2>Campus ranking</h2></div>
+    {% if ch_campus %}<div class="chart" data-chart='{{ ch_campus }}'></div>{% else %}<div class="ch-empty">Rankings appear after the first published exam.</div>{% endif %}</div>
+  <div class="card"><div class="ch-head"><h2>Needs attention</h2></div>
+    {% for s, pct in risk %}
+    <div class="who" style="padding:8px 0;border-bottom:1px solid var(--line)">{% avatar s %}<div><a href="{% url 'organization:student_profile' s.pk %}"><b>{{ s.display_name }}</b></a>
+      <small>{{ s.student_profile.campus.name|default:"—" }}</small></div><span class="badge off" style="margin-left:auto">{{ pct }}%</span></div>
+    {% empty %}<div class="ch-empty">No student is below 50% in published results.</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

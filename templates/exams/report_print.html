@@ -1,0 +1,11 @@
+{% load static ui %}<!doctype html>
+<html lang="en" {% include "partials/theme_attrs.html" %}>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Report card · {{ student.display_name }}</title>
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}"><link rel="stylesheet" href="{% static 'css/app.css' %}"><link rel="stylesheet" href="{% static 'css/premium.css' %}">
+  <style>body{background:#fff !important;color:#111;font-family:var(--font)}.print-bar{position:sticky;top:0;z-index:5;flex-wrap:wrap}@page{size:A4;margin:12mm}.card{border:0;box-shadow:none;padding:0}</style></head>
+<body class="print-body" style="padding:14px 18px">
+  <div class="print-bar no-print"><button class="btn sm" onclick="window.print()">Print</button> Choose “Save as PDF” to keep a copy.</div>
+  {% include "exams/_card.html" %}
+  {% include "exams/_guidance.html" with ai_form=None staff=False %}
+  <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });</script>
+<script src="{% static 'js/charts.js' %}"></script></body></html>

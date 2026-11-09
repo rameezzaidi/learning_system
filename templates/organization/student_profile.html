@@ -1,0 +1,119 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ student.display_name }}{% endblock %}
+{% block content %}
+<section class="pf-cover">
+  <div class="pf-banner"></div>
+  <div class="pf-bar">
+    <div class="pf-av">{% avatar student "xl" %}</div>
+    <div class="pf-id">
+      <h1>{{ student.display_name }}</h1>
+      <p>{% if cls %}<span class="chip">{% icon "school" 14 %} {{ cls }}</span>{% else %}<span class="chip off">Not in a class yet</span>{% endif %}
+        {% if profile and profile.campus %}<span class="chip">{{ profile.campus.name }}</span>{% endif %}
+        {% if profile and profile.admission_no %}<span class="chip">Adm. {{ profile.admission_no }}</span>{% endif %}</p>
+      {% if student.about %}<p class="pf-about">“{{ student.about }}”</p>{% endif %}
+    </div>
+    <div class="pf-act">
+      {% if can_message %}<a class="btn" href="{% url 'chat:start' student.pk %}">{% icon "chat" 18 %} Message</a>{% endif %}
+      {% if is_self %}<a class="btn ghost" href="{% url 'accounts:profile' %}">{% icon "edit" 16 %} Edit profile</a>{% endif %}
+      {% if user.is_super_admin %}<a class="btn ghost" href="{% url 'organization:student_edit' student.pk %}">{% icon "edit" 16 %} Edit</a>{% endif %}
+      {% if perms_sis %}<a class="btn ghost" href="{% url 'sis:documents' student.pk %}">{% icon "clipboard" 16 %} Documents</a>{% endif %}
+      {% if perms_sis_manage %}<a class="btn ghost" href="{% url 'sis:tc_issue' student.pk %}">{% icon "clipboard" 16 %} Transfer certificate</a>{% endif %}
+      {% if user.is_super_admin or user.is_teacher or user.is_management %}<a class="btn ghost" href="{% url 'insights:dna' student.pk %}">{% icon "sparkles" 16 %} Learning profile</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+<div class="pf-grid">
+  <aside class="pf-side">
+    <div class="card">
+      <h3>About</h3>
+      <ul class="facts">
+        <li><span>Class</span><b>{{ cls|default:"—" }}</b></li>
+        {% if profile and profile.campus %}<li><span>Campus</span><b>{{ profile.campus.name }}</b></li><li><span>Region</span><b>{{ profile.campus.region.name }}</b></li>{% endif %}
+        {% if profile and profile.admission_no %}<li><span>Admission no.</span><b>{{ profile.admission_no }}</b></li>{% endif %}
+        <li><span>Username</span><b>@{{ student.username }}</b></li>
+        {% if staff or is_self %}{% if student.email %}<li><span>Email</span><b>{{ student.email }}</b></li>{% endif %}{% if student.phone %}<li><span>Phone</span><b>{{ student.phone }}</b></li>{% endif %}{% endif %}
+        <li><span>Joined</span><b>{{ student.date_joined|date:"d M Y" }}</b></li>
+      </ul>
+    </div>
+    {% if guardians %}
+    <div class="card">
+      <h3>Parents / guardians</h3>
+      <ul class="people">{% for g in guardians %}<li>{% avatar g %}<div class="grow"><b>{{ g.display_name }}</b><small>{{ g.phone|default:g.email|default:"" }}</small></div>
+        {% if user.is_super_admin or user.is_teacher %}<a class="ic-btn" href="{% url 'chat:start' g.pk %}" title="Message" style="width:36px;height:36px">{% icon "chat" 18 %}</a>{% endif %}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if fees %}{% include "fees/_card.html" %}{% endif %}
+    {% if att %}{% include "attendance/_card.html" %}{% endif %}
+    {% if nug %}
+    <div class="card">
+      <h3>{% icon "bolt" 18 %} Nuggets</h3>
+      <ul class="facts">{% for r in nug %}<li><span>{{ r.nugget.title|truncatechars:34 }}</span><b>{% if r.status == 'done' %}<span class="up">✓ {{ r.score|floatformat:0 }}%</span>{% else %}<span class="muted">To do</span>{% endif %}</b></li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if rows %}
+    <div class="card">
+      <h3>Learning progress</h3>
+      {% for r in rows %}<div class="lp"><div class="lp-h"><span>{{ r.course.subject }}</span><b>{{ r.pct }}%</b></div><div class="bar"><i style="width:{{ r.pct }}%"></i></div></div>{% endfor %}
+    </div>
+    {% endif %}
+  </aside>
+
+  <div class="pf-main">
+    <div class="pf-kpis">
+      <div class="pk" style="--h:var(--primary)"><small>Latest result</small><b>{% if kpi.latest %}{{ kpi.latest.pct|default:"—" }}%{% else %}—{% endif %}</b><em>{% if kpi.latest %}{{ kpi.latest.exam.name }} · Grade {{ kpi.latest.grade|default:"—" }}{% else %}No exams yet{% endif %}</em></div>
+      <div class="pk" style="--h:#8b5cf6"><small>Average across terms</small><b>{% if kpi.avg is not None %}{{ kpi.avg }}%{% else %}—{% endif %}</b><em>{{ terms|length }} term{{ terms|length|pluralize }} recorded</em></div>
+      <div class="pk" style="--h:#10b981"><small>Best term</small><b>{% if kpi.best %}{{ kpi.best.pct }}%{% else %}—{% endif %}</b><em>{% if kpi.best %}{{ kpi.best.exam.name }}{% else %}—{% endif %}</em></div>
+      <div class="pk" style="--h:#f59e0b"><small>Quiz average</small><b>{% if quiz_avg is not None %}{{ quiz_avg }}%{% else %}—{% endif %}</b><em>{% if lesson_pct is not None %}Lessons {{ lesson_pct }}% done{% else %}Assessments{% endif %}</em></div>
+    </div>
+
+    {% if terms %}
+    <div class="grid g2 charts">
+      <div class="card"><div class="ch-head"><h2>Progress across terms</h2></div>{% if trend_chart %}<div class="chart" data-chart='{{ trend_chart }}'></div>{% endif %}</div>
+      <div class="card"><div class="ch-head"><h2>Latest term by subject</h2><span class="muted">{{ kpi.latest.exam.name }}</span></div><div class="chart" data-chart='{{ latest_chart }}'></div></div>
+    </div>
+
+    <div class="card">
+      <div class="ch-head"><h2>Subject-wise record</h2><span class="muted">percentage by term</span></div>
+      <div class="table-wrap"><table class="matrix" data-nopage>
+        <thead><tr><th>Subject</th>{% for t in terms_asc %}<th>{{ t.exam.name }}</th>{% endfor %}<th>Average</th><th>Trend</th></tr></thead>
+        <tbody>
+        {% for m in matrix %}<tr><td><b>{{ m.subject }}</b></td>
+          {% for c in m.cells %}<td>{% if c and c.pct is not None %}<span class="cellp {% if c.pct >= 80 %}hi{% elif c.pct >= 60 %}mid{% elif c.pct >= 33 %}lo{% else %}bad{% endif %}">{{ c.pct }}%</span>{% else %}<span class="muted">—</span>{% endif %}</td>{% endfor %}
+          <td><b>{% if m.avg is not None %}{{ m.avg }}%{% else %}—{% endif %}</b></td>
+          <td>{% if m.trend is None %}<span class="muted">—</span>{% elif m.trend > 0 %}<span class="up">▲ {{ m.trend }}</span>{% elif m.trend < 0 %}<span class="down">▼ {{ m.trend|cut:"-" }}</span>{% else %}<span class="muted">＝</span>{% endif %}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <h2 class="pf-h">Term-wise record</h2>
+    <div class="terms">
+      {% for t in terms %}
+      <details class="term" {% if forloop.first %}open{% endif %}>
+        <summary>
+          <div class="t-main"><b>{{ t.exam.name }}</b><small>{{ t.exam.school_class }}{% if t.exam.start_date %} · {{ t.exam.start_date|date:"M Y" }}{% endif %}</small></div>
+          <div class="t-pills">
+            <span class="tp"><small>Percentage</small><b>{% if t.pct is not None %}{{ t.pct }}%{% else %}—{% endif %}</b></span>
+            <span class="tp"><small>Grade</small><b>{{ t.grade|default:"—" }}</b></span>
+            <span class="tp"><small>Position</small><b>{{ t.rank|default:"—" }}{% if t.rank %}<em>/{{ t.n_ranked }}</em>{% endif %}</b></span>
+            <span class="tp res {% if t.result == 'PASS' %}ok{% elif t.result == 'FAIL' %}no{% endif %}">{{ t.result|title|default:"—" }}</span>
+            {% if t.delta is not None %}<span class="tp d {% if t.delta < 0 %}down{% else %}up{% endif %}">{% if t.delta > 0 %}+{% endif %}{{ t.delta }}</span>{% endif %}
+          </div>
+        </summary>
+        <div class="t-body">
+          <div class="table-wrap"><table data-nopage>
+            <thead><tr><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th>Class avg</th></tr></thead>
+            <tbody>{% for x in t.subjects %}<tr><td><b>{{ x.subject }}</b></td><td>{{ x.marks }} / {{ x.total }}</td>
+              <td><span class="cellp {% if x.pct >= 80 %}hi{% elif x.pct >= 60 %}mid{% elif x.pct >= 33 %}lo{% else %}bad{% endif %}">{{ x.pct }}%</span></td><td>{{ x.grade|default:"—" }}</td><td class="muted">{{ x.class_avg|default:"—" }}%</td></tr>{% endfor %}</tbody></table></div>
+          {% if t.weak %}<p class="t-note"><b>Needs work:</b> {% for w in t.weak %}{{ w.subject }}{% if w.pct is not None %} ({{ w.pct }}%){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          {% if t.strong %}<p class="t-note good"><b>Strong in:</b> {% for w in t.strong %}{{ w.subject }}{% if w.pct is not None %} ({{ w.pct }}%){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          <a class="btn ghost sm" href="{% url 'exams:report_card' t.exam.pk student.pk %}">{% icon "clipboard" 16 %} Open report card</a>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card empty"><b>No exam record yet</b><p class="muted">Term results appear here once marks are entered{% if not staff %} and published{% endif %}.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

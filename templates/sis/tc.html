@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ t.number }}{% endblock %}
+{% block content %}
+<div class="page-head noprint"><div><h1>{{ t.number }}</h1></div><button class="btn" onclick="window.print()">{% icon "clipboard" 18 %} Print</button></div>
+<div class="card" style="max-width:720px;padding:32px;line-height:1.9">
+  <h2 style="text-align:center">{{ school.school_name }}</h2><h3 style="text-align:center;text-decoration:underline">SCHOOL LEAVING / TRANSFER CERTIFICATE</h3>
+  <p style="text-align:right">No. {{ t.number }}<br>Date: {{ t.issued_on|date:"d M Y" }}</p>
+  <p>This is to certify that <b>{{ t.student.display_name }}</b>{% if t.student.student_profile.admission_no %} (Admission No. {{ t.student.student_profile.admission_no }}){% endif %} was a student of this school
+  {% if t.student.student_profile.campus %}({{ t.student.student_profile.campus.name }} campus){% endif %} and last studied in <b>{{ t.leaving_class|default:"—" }}</b>.</p>
+  <p>Reason for leaving: {{ t.reason|default:"—" }}.{% if t.destination %} Moving to: {{ t.destination }}.{% endif %} Conduct: {{ t.conduct }}.</p>
+  <p style="margin-top:48px;display:flex;justify-content:space-between"><span>Prepared by: {{ t.issued_by.display_name }}</span><span>Principal / Head: ____________</span></p>
+</div>
+<style>@media print{.sidebar,.topbar,.noprint{display:none!important}.main{margin:0!important}}</style>
+{% endblock %}

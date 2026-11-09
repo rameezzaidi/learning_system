@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Coverage monitor{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Curriculum coverage monitor</h1><p class="muted">How much of each course outline has been taught, per campus. Only campuses you are authorised for.</p></div>
+  {% if can_export %}<a class="btn ghost" href="?format=csv">{% icon "chart" 18 %} Export CSV</a>{% endif %}</div>
+<div class="grid g2">
+  <div class="card"><h2>Campus average</h2>
+    {% for c in campus_avg %}<div style="padding:6px 0"><div style="display:flex;justify-content:space-between"><b>{{ c.campus }}</b><span>{{ c.avg }}% <small class="muted">({{ c.n }} course{{ c.n|pluralize }})</small></span></div><div class="bar"><i style="width:{{ c.avg }}%"></i></div></div>
+    {% empty %}<p class="muted">Add outlines to courses to see coverage.</p>{% endfor %}</div>
+  <div class="card"><h2>Gaps between campuses</h2><p class="muted"><small>Same class and subject, 20+ points apart.</small></p>
+    {% for g in gaps %}<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>{{ g.subject }} · {{ g.grade }}</b> <span class="badge off">{{ g.spread }} pts</span><br><small class="muted">{{ g.min }}% to {{ g.max }}% across {{ g.n }} campuses</small></div>
+    {% empty %}<p class="muted">No large gaps.</p>{% endfor %}</div>
+</div>
+<div class="card table-wrap" style="margin-top:16px"><table>
+  <thead><tr><th>Campus</th><th>Course</th><th>Teacher</th><th>Coverage</th><th>Last covered</th><th></th></tr></thead>
+  {% for r in rows %}<tr><td>{{ r.campus }}</td>
+    <td><a href="{% url 'curriculum:outline' r.course.pk %}"><b>{{ r.course.subject }}</b></a> <small class="muted">{{ r.course.school_class }}</small></td>
+    <td>{{ r.course.teacher.display_name|default:"—" }}</td>
+    <td>{% if r.cov.pct is not None %}{{ r.cov.pct }}% <small class="muted">({{ r.cov.done }}/{{ r.cov.total }})</small>{% else %}—{% endif %}</td>
+    <td>{% if r.cov.last_on %}{{ r.cov.last_on|date:"d M Y" }}{% else %}—{% endif %}</td>
+    <td>{% if r.empty %}<span class="badge">No outline</span>{% elif r.stale %}<span class="badge off">Not updated {{ stale_days }}+ days</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No courses in your scope.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

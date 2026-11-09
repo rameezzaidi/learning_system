@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Learning profile · {{ p.student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Learning profile · {{ p.student.display_name }}</h1><p class="muted">{{ p.cls|default:"No class" }}. Built only from quiz scores{% if p.exam_name %}, {{ p.exam_name }}{% endif %}, lesson progress, attendance and nuggets. It describes results, not the student.</p></div></div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:#10b981"><b>{{ p.strengths|length }}</b><span class="kpi-l">Strong subjects (≥70%)</span></div>
+  <div class="kpi" style="--h:#f43f5e"><b>{{ p.focus|length }}</b><span class="kpi-l">Need focus (&lt;50%)</span></div>
+  <div class="kpi" style="--h:var(--primary)"><b>{% if p.att.pct is not None %}{{ p.att.pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Attendance (30 days)</span></div>
+  <div class="kpi" style="--h:#f59e0b"><b>{{ p.nuggets.mastered }}/{{ p.nuggets.total }}</b><span class="kpi-l">Nuggets mastered</span></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card table-wrap"><h3>By subject</h3><table><thead><tr><th>Subject</th><th>Score</th><th>Quiz avg</th><th>Exam</th><th>Lessons</th></tr></thead>
+    {% for r in p.rows %}<tr><td><b>{{ r.subject }}</b></td>
+      <td>{% if r.score is not None %}<div class="bar" style="min-width:90px"><i style="width:{{ r.score|floatformat:0 }}%;background:{% if r.level == 'strong' %}#10b981{% elif r.level == 'weak' %}#f43f5e{% else %}#f59e0b{% endif %}"></i></div><small>{{ r.score }}%</small>{% else %}—{% endif %}</td>
+      <td>{% if r.quiz is not None %}{{ r.quiz }}%{% else %}—{% endif %}</td><td>{% if r.exam is not None %}{{ r.exam|floatformat:0 }}%{% else %}—{% endif %}</td><td>{{ r.lessons_done }}/{{ r.lessons_total }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No subjects yet.</td></tr>{% endfor %}</table></div>
+  <div><div class="card"><h3>Suggested next steps</h3><ul class="reasons">{% for s in p.steps %}<li>{{ s }}</li>{% endfor %}</ul></div>
+    {% if can_remark %}<div class="card" style="margin-top:16px"><h3>Draft remark for the report card</h3><p id="remark">{{ p.remark }}</p><small class="muted">Edit before use. Generated from the numbers on this page.</small></div>{% endif %}</div>
+</div>
+<style>.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%}</style>
+{% endblock %}

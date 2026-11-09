@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Gradebook{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Gradebook</h1><p class="muted">Choose a course.</p></div></div>
+<div class="grid g2">
+  {% for c in courses %}<a class="card link" href="{% url 'assessments:gradebook' c.pk %}"><h3 style="margin:0">{{ c.subject }}</h3><small class="muted">{{ c.school_class }}</small></a>
+  {% empty %}<div class="card empty">No courses.</div>{% endfor %}
+</div>
+{% endblock %}

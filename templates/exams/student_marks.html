@@ -1,0 +1,69 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Marks · {{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ student.display_name }}</h1>
+  <p class="muted">{{ exam.name }} · {{ exam.school_class }} · all subjects on one page</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <select class="select" onchange="if(this.value)location=this.value" style="max-width:220px" aria-label="Switch student">
+      {% for s in students %}<option value="{% url 'exams:student_marks' exam.pk s.pk %}" {% if s.pk == student.pk %}selected{% endif %}>{{ s.display_name }}</option>{% endfor %}</select>
+    <a class="btn ghost" href="{% url 'exams:students' exam.pk %}">All students</a></div></div>
+{% if locked %}<div class="card" style="border-color:var(--danger)"><b>Marks are locked.</b> You can view them, but not change them. Ask the admin to unlock.</div>{% endif %}
+<form method="post" class="card" id="sm">{% csrf_token %}
+  <div class="table-wrap"><table class="marks">
+    <thead><tr><th>Subject</th><th style="width:130px">Marks</th><th style="width:90px">Out of</th><th style="width:80px">Absent</th><th style="width:90px">%</th><th style="width:70px">Grade</th><th>Remarks</th></tr></thead>
+    {% for r in rows %}<tr {% if r.error %}class="rowerr"{% endif %} data-total="{{ r.paper.total_marks|floatformat:'-2' }}">
+      <td><b>{{ r.paper.subject_name }}</b>{% if not r.editable and not locked %}<br><small class="muted">taught by {{ r.paper.course.teacher.display_name|default:"another teacher" }}</small>{% endif %}</td>
+      <td>{% if r.editable %}<input class="input" type="text" inputmode="decimal" name="m_{{ r.paper.id }}" value="{{ r.marks }}" autocomplete="off" data-m>{% if r.error %}<small class="err">{{ r.error }}</small>{% endif %}
+        {% else %}<b>{% if r.absent %}ABS{% elif r.marks == "" %}—{% else %}{{ r.marks }}{% endif %}</b>{% endif %}</td>
+      <td class="muted">{{ r.paper.total_marks|floatformat:"-2" }}</td>
+      <td>{% if r.editable %}<input type="checkbox" name="a_{{ r.paper.id }}" {% if r.absent %}checked{% endif %} data-a>{% elif r.absent %}Yes{% endif %}</td>
+      <td><b data-pct>—</b></td><td data-grade>—</td>
+      <td>{% if r.editable %}<input class="input" name="r_{{ r.paper.id }}" value="{{ r.remarks }}" placeholder="optional">{% else %}{{ r.remarks }}{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="7" class="empty">No papers in this exam yet.</td></tr>{% endfor %}
+    <tfoot><tr><td><b>Total</b></td><td><b id="tot">—</b></td><td><b id="out">—</b></td><td></td><td><b id="opct">—</b></td><td><b id="ograde">—</b></td><td class="muted" id="oremark"></td></tr></tfoot>
+  </table></div>
+  {% if any_editable %}<div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn" name="action" value="save">{% icon "check" 18 %} Save</button>
+    {% if next_student %}<button class="btn ghost" name="action" value="next">Save &amp; next student</button>{% endif %}
+    <button class="btn" name="action" value="card" style="background:var(--success,#16a34a)">{% icon "clipboard" 18 %} Save &amp; print report card</button>
+  </div>
+  <small class="muted">Type a mark and press Enter to jump to the next subject. “Save &amp; print report card” also prepares the weak areas, English + Urdu suggestions and the weekly study plan, then opens the print page.</small>{% endif %}
+</form>
+<script>
+(function () {
+  var bands = [{% for b in bands %}[{{ b.min_percent|floatformat:"-2" }}, "{{ b.grade }}", "{{ b.remark|escapejs }}"]{% if not forloop.last %},{% endif %}{% endfor %}];
+  function band(p) { for (var i = 0; i < bands.length; i++) if (p >= bands[i][0]) return bands[i]; return null; }
+  var rows = Array.prototype.slice.call(document.querySelectorAll("#sm tr[data-total]"));
+  function recalc() {
+    var tot = 0, out = 0, any = false;
+    rows.forEach(function (tr) {
+      var t = parseFloat(tr.dataset.total), m = tr.querySelector("[data-m]"), a = tr.querySelector("[data-a]");
+      var val = m ? m.value.trim() : null, abs = a ? a.checked : false;
+      var pctEl = tr.querySelector("[data-pct]"), gEl = tr.querySelector("[data-grade]");
+      if (m === null) { var txt = tr.children[1].innerText.trim(); val = (txt === "—" || txt === "ABS") ? "" : txt; abs = txt === "ABS"; }
+      if (abs) { pctEl.textContent = "—"; gEl.textContent = "ABS"; out += t; any = true; return; }
+      var v = parseFloat(val);
+      if (val === "" || isNaN(v)) { pctEl.textContent = "—"; gEl.textContent = "—"; return; }
+      var p = Math.round(v * 1000 / t) / 10, b = band(p);
+      pctEl.textContent = p + "%"; gEl.textContent = b ? b[1] : "—"; tot += v; out += t; any = true;
+    });
+    document.getElementById("tot").textContent = any ? Math.round(tot * 100) / 100 : "—";
+    document.getElementById("out").textContent = any ? out : "—";
+    var op = any && out ? Math.round(tot * 1000 / out) / 10 : null, ob = op === null ? null : band(op);
+    document.getElementById("opct").textContent = op === null ? "—" : op + "%";
+    document.getElementById("ograde").textContent = ob ? ob[1] : "—";
+    document.getElementById("oremark").textContent = ob ? ob[2] : "";
+  }
+  var f = Array.prototype.slice.call(document.querySelectorAll("#sm [data-m]"));
+  f.forEach(function (el, i) {
+    el.addEventListener("input", recalc);
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); var n = f[i + 1]; if (n) { n.focus(); n.select(); } } });
+  });
+  document.querySelectorAll("#sm [data-a]").forEach(function (c) {
+    function sync() { var m = c.closest("tr").querySelector("[data-m]"); if (c.checked) m.value = ""; m.disabled = c.checked; recalc(); }
+    c.addEventListener("change", sync); if (c.checked) c.closest("tr").querySelector("[data-m]").disabled = true;
+  });
+  recalc(); if (f[0]) f[0].focus();
+})();
+</script>
+{% endblock %}

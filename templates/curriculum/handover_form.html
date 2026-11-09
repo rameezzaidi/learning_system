@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Hand over course{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Hand over {{ course.subject }}</h1><p class="muted">{{ course.school_class }} · current teacher: {{ course.teacher.display_name|default:"none" }}</p></div><a class="btn ghost" href="{% url 'curriculum:outline' course.pk %}">Back</a></div>
+<form method="post" class="card" style="max-width:640px">{% csrf_token %}
+  <label class="field"><span>Type</span><select class="select" name="kind" id="kind"><option value="absence">Absence cover (temporary, the course teacher stays the same)</option><option value="transfer">Transfer (course moves to the new teacher)</option></select></label>
+  <label class="field"><span>New / cover teacher</span><select class="select" name="to" required><option value="">— Choose —</option>{% for t in teachers %}<option value="{{ t.pk }}">{{ t.display_name }}</option>{% endfor %}</select></label>
+  <label class="field"><span>Reason</span><input class="input" name="reason" maxlength="300" placeholder="e.g. Medical leave"></label>
+  <label class="field" id="ret"><span>Expected return</span><input class="input" type="date" name="expected_return"></label>
+  <p class="muted"><small>A report of what has been taught, what is next, and which students need help is frozen at this moment and sent to the teacher.</small></p>
+  <button class="btn">{% icon "check" 18 %} Send handover</button>
+</form>
+<script>(function(){var k=document.getElementById("kind"),r=document.getElementById("ret");function s(){r.style.display=k.value==="absence"?"":"none"}k.addEventListener("change",s);s()})();</script>
+{% endblock %}

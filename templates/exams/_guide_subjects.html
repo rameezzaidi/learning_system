@@ -1,0 +1,15 @@
+{# weak areas + study plan, written once, each subject in its own language (Urdu script for Urdu/Islamiat). needs: g #}
+{% if g.weak_areas %}<h3>Weak areas · کمزور مضامین</h3>
+<div class="weak">{% for w in g.weak_areas %}<div class="wk {% if w.lang == 'urs' %}urs{% endif %}" {% if w.lang == 'urs' %}dir="rtl" lang="ur"{% endif %}><b>{{ w.subject }}</b><p>{{ w.issue }}</p><p class="muted">{{ w.advice }}</p></div>{% endfor %}</div>{% endif %}
+{% if g.subject_plans %}
+<h3>Study plan for the student — please follow · طالب علم کا اسٹڈی پلان</h3>
+{% if g.timetable %}<table class="tt"><thead><tr><th>Day · دن</th><th>Subject · مضمون</th><th>Time · وقت</th><th>✓</th></tr></thead>
+  {% for t in g.timetable %}<tr><td><b>{{ t.day }}</b></td><td>{{ t.subject }}</td><td>{% if t.minutes %}{{ t.minutes }} min{% else %}—{% endif %}</td><td class="tick"></td></tr>{% endfor %}</table>
+{% if g.timetable_tip %}<p class="muted" style="margin:6px 0 2px;font-size:.85rem">{{ g.timetable_tip }}</p>{% endif %}
+{% if g.timetable_tip_ur %}<p class="muted urs" dir="rtl" lang="ur" style="margin:0 0 10px;font-size:.9rem">{{ g.timetable_tip_ur }}</p>{% endif %}{% endif %}
+<div class="plans">{% for p in g.subject_plans %}<div class="plan {% if p.lang == 'urs' %}urs{% endif %}" {% if p.lang == 'urs' %}dir="rtl" lang="ur"{% endif %}><div class="plan-h"><b>{{ p.subject }}</b>
+    {% if p.lang == 'urs' %}<span class="chip">ابھی {{ p.current }}% ← ہدف {{ p.target }}%</span><span class="chip">روزانہ {{ p.daily_minutes }} منٹ</span>
+    {% else %}<span class="chip">Now {{ p.current }}% → Goal {{ p.target }}%</span><span class="chip">{{ p.daily_minutes }} min daily</span>{% endif %}</div>
+  {% for w in p.weeks %}<div class="pw"><b>{{ w.title }}</b><ul>{% for t in w.tasks %}<li>{{ t }}</li>{% endfor %}</ul></div>{% endfor %}
+  <p class="plan-check">{{ p.checkpoint }}</p></div>{% endfor %}</div>
+{% endif %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% load ui static %}
+{% block title %}{% if obj %}Edit nugget{% else %}New nugget{% endif %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="{% static 'js/nugget_editor.js' %}"></script>
+{% if obj %}<form method="post" action="{% url 'nuggets:delete' obj.pk %}" class="nf-del" onsubmit="return confirm('Delete this nugget?')">{% csrf_token %}<button class="btn ghost danger">Delete this nugget</button></form>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{% if obj %}Edit nugget{% else %}New nugget{% endif %}</h1><p class="muted">One idea, explained in 5 minutes, with flashcards and a quick check.</p></div>
+  <a class="btn ghost" href="{% url 'nuggets:manage' %}">{% icon "back" 18 %} Back</a></div>
+<form method="post" class="nf" id="nf" novalidate data-kinds="{{ kinds|json_attr }}" data-suggest="{% url 'nuggets:suggest' %}">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="nf-grid">
+    <div class="nf-main">
+      <section class="card nf-sec">
+        <h3><span class="nf-n">1</span> Basics</h3>
+        <div class="form-grid">
+          {% include "partials/field.html" with field=form.course %}
+          {% include "partials/field.html" with field=form.topic %}
+        </div>
+        {% include "partials/field.html" with field=form.title %}
+      </section>
+      <section class="card nf-sec">
+        <h3><span class="nf-n">2</span> Learn</h3>
+        {% include "partials/field.html" with field=form.explanation %}
+        {% include "partials/field.html" with field=form.key_points %}
+        {% include "partials/field.html" with field=form.video_url %}
+      </section>
+      <section class="card nf-sec">
+        <h3><span class="nf-n">3</span> Practice &amp; check</h3>
+        {% include "partials/field.html" with field=form.cards_text %}
+        {% include "partials/field.html" with field=form.questions_text %}
+      </section>
+    </div>
+    <aside class="nf-side">
+      <section class="card nf-sec">
+        <h3>Settings</h3>
+        <div class="form-grid">
+          {% include "partials/field.html" with field=form.minutes %}
+          {% include "partials/field.html" with field=form.difficulty %}
+        </div>
+        {% include "partials/field.html" with field=form.is_published %}
+        <button class="btn block">{% icon "check" 18 %} Save nugget</button>
+        {% if obj %}<a class="btn ghost block" style="margin-top:10px" href="{% url 'nuggets:play' obj.pk %}">Preview</a>{% endif %}
+      </section>
+      <section class="card nf-ai" id="nf-ai">
+        <h3>{% icon "sparkles" 18 %} AI coach</h3>
+        <p class="muted" style="margin:0 0 12px;font-size:.88rem">Get feedback on this draft: what to fix, a clearer rewrite, and extra flashcards and questions you can add with one click.</p>
+        <button type="button" class="btn block" id="ai-go">{% icon "bolt" 18 %} Suggest improvements</button>
+        <div id="ai-out" hidden></div>
+      </section>
+      <section class="card nf-help">
+        <h3>{% icon "sparkles" 18 %} Formats</h3>
+        <p><b>Flashcards</b><br><code>front | back</code></p>
+        <p><b>Quick check</b><br><code>Question | A | B | C | D | B | Why</code><br><small class="muted">The letter before the last bar is the correct option. Leave C and D empty for a True/False question.</small></p>
+        <p class="muted" style="margin:0">Tip: use “Create a nugget automatically” on the Nuggets page and edit the result.</p>
+      </section>
+    </aside>
+  </div>
+</form>
+{% if obj %}<form method="post" action="{% url 'nuggets:delete' obj.pk %}" class="nf-del" onsubmit="return confirm('Delete this nugget?')">{% csrf_token %}<button class="btn ghost danger">Delete this nugget</button></form>{% endif %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="{% static 'js/nugget_editor.js' %}"></script>
+{% endblock %}

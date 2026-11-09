@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Notifications</h1><p class="muted">Updates about your learning, results and messages.</p></div>
+  <form method="post" action="{% url 'core_notifications_read' %}">{% csrf_token %}<button class="btn ghost">{% icon "check" 18 %} Mark all as read</button></form></div>
+<div class="card nt-list">
+  {% for n in page_obj %}
+  <a class="nt-item {% if not n.is_read %}unread{% endif %}" href="{% url 'core_notification_open' n.pk %}">
+    <span class="nt-dot"></span><div class="grow"><b>{{ n.title }}</b>{% if n.body %}<small>{{ n.body }}</small>{% endif %}</div><time>{{ n.created_at|timesince }} ago</time></a>
+  {% empty %}<div class="empty" style="padding:28px;text-align:center"><b>Nothing yet</b><p class="muted">You will see new nuggets, results and reminders here.</p></div>{% endfor %}
+</div>
+{% include "partials/pager.html" %}
+{% endblock %}

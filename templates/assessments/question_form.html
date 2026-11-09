@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1><p class="muted">{{ a.title }} · {{ a.course.subject }} <span class="chip">{% with k=a.course.subject.name|subj_kind %}{% if k == "math" %}Maths editor{% elif k == "english" %}English editor{% elif k == "urdu" %}Urdu editor{% else %}Standard editor{% endif %}{% endwith %}</span></p></div>
+  <a class="btn ghost" href="{% url 'assessments:detail' a.pk %}">Back</a></div>
+<form method="post" class="card" style="max-width:720px" id="qform" data-kind="{{ a.course.subject.name|subj_kind }}">{% csrf_token %}
+  {{ form.non_field_errors }}
+  {% include "partials/field.html" with field=form.kind %}
+  {% include "partials/field.html" with field=form.text %}
+  {% include "partials/field.html" with field=form.points %}
+  <div data-for="mcq">
+    {% include "partials/field.html" with field=form.choice1 %}{% include "partials/field.html" with field=form.choice2 %}
+    {% include "partials/field.html" with field=form.choice3 %}{% include "partials/field.html" with field=form.choice4 %}
+    {% include "partials/field.html" with field=form.correct %}
+  </div>
+  <div data-for="tf">{% include "partials/field.html" with field=form.tf_answer %}</div>
+  <div data-for="short">{% include "partials/field.html" with field=form.accepted %}</div>
+  {% include "partials/field.html" with field=form.explanation %}
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn">{% icon "check" 18 %} Save</button>
+    {% if not form.instance.pk %}<button class="btn ghost" name="add_another" value="1">Save &amp; add another</button>{% endif %}
+  </div>
+</form>
+{% if a.course.subject.name|subj_kind == "math" %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+{% endif %}
+{% load static %}<script src="{% static 'js/editor.js' %}"></script>
+<script>
+(function () {
+  var kind = document.getElementById("id_kind");
+  function sync() { document.querySelectorAll("[data-for]").forEach(function (el) { el.style.display = el.dataset.for === kind.value ? "" : "none"; }); }
+  kind.addEventListener("change", sync); sync();
+})();
+</script>
+{% endblock %}

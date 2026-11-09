@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Report card{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Report Card</h1><p class="muted">{{ student.display_name }} · {{ exam.name }}{% if not exam.is_published %} · <b>not published yet (staff only)</b>{% endif %}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn ghost" href="?print=1" target="_blank">Print</a>
+    <a class="btn ghost" href="{% url 'exams:report_card_pdf' exam.pk student.pk %}" target="_blank">Download PDF</a>
+    {% if staff %}<a class="btn" href="{% url 'exams:student_marks' exam.pk student.pk %}">Edit marks</a><a class="btn ghost" href="{% url 'exams:sheet' exam.pk %}">Result sheet</a>{% elif user.is_student %}<a class="btn ghost" href="{% url 'exams:my_results' %}">All results</a>
+    {% else %}<a class="btn ghost" href="{% url 'exams:child_results' student.pk %}">All results</a>{% endif %}</div></div>
+<div class="card">{% include "exams/_card.html" %}</div>
+{% include "exams/_guidance.html" %}
+{% endblock %}

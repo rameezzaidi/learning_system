@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Student-wise marks · {{ exam.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Student-wise marks</h1>
+  <p class="muted">{{ exam.name }} · {{ exam.school_class }} · open a student, enter all subjects, then print the report card.</p></div>
+  <a class="btn ghost" href="{% url 'exams:detail' exam.pk %}">Back</a></div>
+<div class="card"><div class="table-wrap"><table class="t">
+  <thead><tr><th>Student</th><th>Marks entered</th><th>%</th><th>Grade</th><th>Result</th><th></th></tr></thead>
+  {% for r in rows %}<tr><td><b>{{ r.student.display_name }}</b> <small class="muted">{{ r.student.username }}</small></td>
+    <td>{{ r.entered }} / {{ r.n }}</td><td>{% if r.pct is None %}—{% else %}{{ r.pct }}%{% endif %}</td><td>{{ r.band.grade|default:"—" }}</td><td>{{ r.result|title }}</td>
+    <td style="text-align:right;white-space:nowrap"><a class="btn sm" href="{% url 'exams:student_marks' exam.pk r.student.pk %}">{% if exam.marks_locked %}View{% else %}Enter marks{% endif %}</a>
+      {% if r.pct is not None %}<a class="btn ghost sm" href="{% url 'exams:report_card' exam.pk r.student.pk %}">Report card</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No students in this class.</td></tr>{% endfor %}
+</table></div></div>
+{% endblock %}

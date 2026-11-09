@@ -1,0 +1,54 @@
+/* Each theme only defines variables. Add a new theme = add one block here + one entry in core/themes.py */
+
+:root,
+[data-theme="ocean"] {
+  --bg: #f4f7fb; --surface: #ffffff; --surface-2: #f1f5f9; --text: #0f172a; --muted: #64748b;
+  --border: #e2e8f0; --primary: #2563eb; --on-primary: #ffffff; --accent: #06b6d4;
+  --sidebar-bg: #0f2a5c; --sidebar-text: #c7d6f5; --sidebar-active: rgba(255,255,255,.14);
+  --danger: #dc2626; --success: #16a34a; --warning: #d97706; --shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+}
+[data-theme="emerald"] {
+  --bg: #f3f8f5; --surface: #ffffff; --surface-2: #ecf5f0; --text: #0f2a1d; --muted: #5f7a6b;
+  --border: #dbe9e0; --primary: #059669; --on-primary: #ffffff; --accent: #f59e0b;
+  --sidebar-bg: #064e3b; --sidebar-text: #bfe9d6; --sidebar-active: rgba(255,255,255,.14);
+}
+[data-theme="royal"] {
+  --bg: #f6f4fb; --surface: #ffffff; --surface-2: #f0ecf9; --text: #1e1038; --muted: #6e6488;
+  --border: #e6e0f3; --primary: #7c3aed; --on-primary: #ffffff; --accent: #ec4899;
+  --sidebar-bg: #2e1065; --sidebar-text: #dcd0fb; --sidebar-active: rgba(255,255,255,.14);
+}
+[data-theme="sunset"] {
+  --bg: #fbf6f1; --surface: #ffffff; --surface-2: #f8efe6; --text: #2a1608; --muted: #86694f;
+  --border: #f0e2d3; --primary: #ea580c; --on-primary: #ffffff; --accent: #eab308;
+  --sidebar-bg: #7c2d12; --sidebar-text: #fbd9c0; --sidebar-active: rgba(255,255,255,.15);
+}
+[data-theme="rose"] {
+  --bg: #fbf4f6; --surface: #ffffff; --surface-2: #f8eaee; --text: #2d0f19; --muted: #8a6571;
+  --border: #f1dde3; --primary: #e11d48; --on-primary: #ffffff; --accent: #8b5cf6;
+  --sidebar-bg: #881337; --sidebar-text: #fcd0dc; --sidebar-active: rgba(255,255,255,.15);
+}
+[data-theme="graphite"] {
+  --bg: #f5f5f6; --surface: #ffffff; --surface-2: #eeeeef; --text: #111827; --muted: #6b7280;
+  --border: #e5e7eb; --primary: #1f2937; --on-primary: #ffffff; --accent: #6366f1;
+  --sidebar-bg: #111827; --sidebar-text: #cbd5e1; --sidebar-active: rgba(255,255,255,.12);
+}
+[data-theme="midnight"] {
+  --bg: #0b1220; --surface: #131c2f; --surface-2: #1a2540; --text: #e5eaf5; --muted: #8e9bb8;
+  --border: #243152; --primary: #818cf8; --on-primary: #0b1220; --accent: #22d3ee;
+  --sidebar-bg: #0a101d; --sidebar-text: #a9b6d3; --sidebar-active: rgba(129,140,248,.18);
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* Sidebar override chosen by the school */
+[data-sidebar="light"] { --sidebar-bg: var(--surface); --sidebar-text: var(--muted); --sidebar-active: color-mix(in srgb, var(--primary) 12%, transparent); }
+[data-sidebar="light"] .sidebar { border-right: 1px solid var(--border); }
+[data-sidebar="light"] .sidebar .brand-name, [data-sidebar="light"] .nav a.active { color: var(--text); }
+[data-sidebar="dark"] { --sidebar-bg: #0b1220; --sidebar-text: #a9b6d3; --sidebar-active: rgba(255,255,255,.12); }
+
+/* Shape & font options */
+[data-radius="sharp"] { --radius: 4px; }
+[data-radius="soft"]  { --radius: 12px; }
+[data-radius="round"] { --radius: 20px; }
+[data-font="sans"]    { --font: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif; }
+[data-font="serif"]   { --font: Georgia, Cambria, "Times New Roman", serif; }
+[data-font="rounded"] { --font: ui-rounded, "Nunito", "Varela Round", "Segoe UI", system-ui, sans-serif; }

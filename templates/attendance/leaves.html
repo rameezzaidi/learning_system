@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Leave requests{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Leave requests</h1><p class="muted">Approved leave is marked as excused on the register.</p></div></div>
+<form class="toolbar" method="get"><select class="select" style="max-width:200px" name="status" onchange="this.form.submit()">{% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Student</th><th>Dates</th><th>Reason</th><th>Status</th><th></th></tr></thead>
+  {% for l in rows %}<tr>
+    <td><b>{{ l.student.display_name }}</b></td><td>{{ l.from_date|date:"d M" }} to {{ l.to_date|date:"d M" }}</td><td>{{ l.reason }}</td>
+    <td>{{ l.get_status_display }}{% if l.decided_by %}<small> · {{ l.decided_by.display_name }}</small>{% endif %}</td>
+    <td>{% if l.status == 'pending' %}<form method="post" action="{% url 'attendance:leave_decide' l.pk %}" class="inline" style="display:flex;gap:6px">{% csrf_token %}
+      <input class="input" name="note" placeholder="Note (optional)" maxlength="200" style="max-width:160px" aria-label="Decision note">
+      <button class="btn sm" name="decision" value="approved">Approve</button><button class="btn ghost sm" name="decision" value="rejected">Reject</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">No {{ status }} leave requests.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

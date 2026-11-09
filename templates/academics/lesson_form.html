@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1><p class="muted">{{ course }}</p></div>
+  <a class="btn ghost" href="{% url 'academics:course_detail' course.pk %}">Back</a></div>
+<form method="post" enctype="multipart/form-data" class="card" style="max-width:780px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.title %}
+    {% include "partials/field.html" with field=form.module %}
+  </div>
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.kind %}
+    {% include "partials/field.html" with field=form.minutes %}
+  </div>
+  {% include "partials/field.html" with field=form.content %}
+  <div data-kind="video link embed">{% include "partials/field.html" with field=form.url %}</div>
+  <div data-kind="file">{% include "partials/field.html" with field=form.file %}</div>
+  <div data-kind="quiz">{% include "partials/field.html" with field=form.assessment %}</div>
+  <div data-kind="game">
+    {% include "partials/field.html" with field=form.game_type %}
+    {% include "partials/field.html" with field=form.game_data %}
+  </div>
+  {% include "partials/field.html" with field=form.is_published %}
+  <p class="help" style="margin-top:-8px">Unpublished items are drafts: students cannot see them.</p>
+  <button class="btn">{% icon "check" 18 %} Save</button>
+</form>
+<script>
+(function () {
+  var kind = document.getElementById("id_kind");
+  function sync() { document.querySelectorAll("[data-kind]").forEach(function (el) {
+    el.style.display = el.dataset.kind.split(" ").indexOf(kind.value) >= 0 ? "" : "none"; }); }
+  kind.addEventListener("change", sync); sync();
+})();
+</script>
+{% endblock %}

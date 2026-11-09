@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Nuggets{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Nuggets</h1><p class="muted">Short micro-lessons with flashcards and a quick check. Weak students receive them automatically.</p></div>
+  <div class="actions"><a class="btn ghost" href="{% url 'nuggets:insights' %}">{% icon "chart" 18 %} Class insights</a><a class="btn" href="{% url 'nuggets:create' %}">{% icon "plus" 18 %} New nugget</a></div></div>
+
+{% if pending_n and not only_pending %}<div class="msg info" style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><span><b>{{ pending_n }}</b> AI-made nugget{{ pending_n|pluralize }} waiting for your review — students cannot see {{ pending_n|pluralize:"it,them" }} until you approve.</span><a class="btn sm" href="?review=pending">Review now</a></div>{% endif %}
+{% if only_pending %}<div class="msg info" style="display:flex;justify-content:space-between;gap:12px;align-items:center"><span>Showing nuggets that need review.</span><a class="btn ghost sm" href="{% url 'nuggets:manage' %}">Show all</a></div>{% endif %}
+<div class="grid g2">
+  <form class="card" method="post" action="{% url 'nuggets:auto_exam' %}">{% csrf_token %}
+    <h3 style="margin-top:0">{% icon "sparkles" 18 %} Send nuggets for an exam</h3>
+    <p class="muted">Every student who is weak in a subject gets nuggets for it. Missing nuggets are created automatically (AI if configured). This also runs when you publish results.</p>
+    <div class="row-inline"><select class="select" name="exam" required>{% for e in exams %}<option value="{{ e.pk }}">{{ e.name }} · {{ e.school_class }}</option>{% empty %}<option value="">No exams yet</option>{% endfor %}</select>
+      <button class="btn" {% if not exams %}disabled{% endif %}>Send now</button></div>
+  </form>
+  <form class="card" method="post" action="{% url 'nuggets:generate' %}">{% csrf_token %}
+    <h3 style="margin-top:0">{% icon "bolt" 18 %} Create a nugget automatically</h3>
+    <p class="muted">Pick a course and a topic. We build the lesson, flashcards and quick check from your course material.</p>
+    <div class="row-inline"><select class="select" name="course" required>{% for c in courses %}<option value="{{ c.pk }}" {% if c.pk == cid %}selected{% endif %}>{{ c.subject.name }} · {{ c.school_class }}</option>{% endfor %}</select>
+      <input class="input" name="topic" placeholder="Topic, e.g. Fractions" required maxlength="120"><button class="btn">Create</button></div>
+  </form>
+</div>
+
+<form method="get" class="toolbar" style="margin:18px 0 12px;max-width:340px"><select class="select" name="course" onchange="this.form.submit()"><option value="">All courses</option>
+  {% for c in courses %}<option value="{{ c.pk }}" {% if c.pk == cid %}selected{% endif %}>{{ c.subject.name }} · {{ c.school_class }}</option>{% endfor %}</select></form>
+
+<div class="card table-wrap"><table>
+  <thead><tr><th>Nugget</th><th>Course</th><th>Source</th><th>Sent</th><th>Mastered</th><th></th></tr></thead>
+  <tbody>{% for n in items %}
+    <tr><td><a href="{% url 'nuggets:stats' n.pk %}"><b>{{ n.title }}</b></a><small class="muted" style="display:block">{{ n.topic }} · {{ n.minutes }} min{% if not n.is_published %} · hidden{% endif %}</small></td>
+      <td>{{ n.course.subject.name }} · {{ n.course.school_class }}</td><td><span class="badge {% if n.source == 'manual' %}teacher{% endif %}">{{ n.get_source_display }}</span>{% if n.review == 'pending' %}<span class="badge off">Needs review</span>{% endif %}</td>
+      <td>{{ n.n_assigned }}</td><td>{{ n.n_done }}</td>
+      <td><div class="actions">{% if n.review == 'pending' %}<form method="post" action="{% url 'nuggets:approve' n.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn sm">Approve</button></form><form method="post" action="{% url 'nuggets:reject' n.pk %}" onsubmit="return confirm('Remove this draft?')">{% csrf_token %}<button class="btn ghost sm danger">Reject</button></form>{% endif %}<a class="btn ghost sm" href="{% url 'nuggets:play' n.pk %}">Preview</a><a class="btn ghost sm" href="{% url 'nuggets:edit' n.pk %}">Edit</a></div></td></tr>
+  {% empty %}<tr><td colspan="6" class="muted" style="text-align:center;padding:28px">No nuggets yet. Create one above, or publish results and they will be created for weak students.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

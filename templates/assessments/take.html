@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ a.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ a.title }}</h1><p class="muted">{{ a.course.subject }} · {{ a.total_points|floatformat:"-2" }} points</p>
+  {% if a.instructions %}<p>{{ a.instructions }}</p>{% endif %}</div>
+  {% if seconds is not None %}<div class="timer" id="timer" data-seconds="{{ seconds }}">--:--</div>{% endif %}</div>
+<form method="post" id="quiz">{% csrf_token %}
+  {% for q in questions %}
+  <div class="card qcard">
+    <div class="qhead"><span class="num">{{ forloop.counter }}</span><div class="grow">{{ q.text|linebreaksbr }}</div><small class="muted">{{ q.points|floatformat:"-2" }} pt{{ q.points|pluralize }}</small></div>
+    {% if q.kind == "mcq" or q.kind == "tf" %}
+      {% for c in q.choices.all %}<label class="ans"><input type="radio" name="q{{ q.id }}" value="{{ c.pk }}"> {{ c.text }}</label>{% endfor %}
+    {% elif q.kind == "short" %}<input class="input" name="q{{ q.id }}" placeholder="Your answer" autocomplete="off">
+    {% else %}<textarea class="input" name="q{{ q.id }}" rows="5" placeholder="Write your answer"></textarea>{% endif %}
+  </div>
+  {% empty %}<div class="card empty">This assessment has no questions.</div>{% endfor %}
+  <button class="btn" onclick="return confirm('Submit your answers?')">{% icon "check" 18 %} Submit</button>
+</form>
+{% if seconds is not None %}
+<script>
+(function () {
+  var el = document.getElementById("timer"), left = parseInt(el.dataset.seconds, 10), f = document.getElementById("quiz");
+  function tick() {
+    var m = Math.floor(left / 60), s = left % 60;
+    el.textContent = (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    if (left <= 60) el.classList.add("low");
+    if (left <= 0) { f.querySelector("button.btn").onclick = null; f.submit(); return; }
+    left--; setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+{% endif %}
+{% include "partials/subject_ui.html" with name=a.course.subject.name %}
+{% endblock %}

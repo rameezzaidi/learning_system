@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Regions &amp; Campuses{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Regions &amp; Campuses</h1><p class="muted">Structure: Region → Campus → Students. Records marked <span class="badge teacher">Oracle</span> sync automatically; add your own with the buttons.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn ghost" href="{% url 'organization:compare' %}">{% icon "chart" 18 %} Compare campuses</a>
+    {% if can_manage %}<a class="btn ghost" href="{% url 'organization:region_create' %}">{% icon "plus" 18 %} Region</a>
+    <a class="btn" href="{% url 'organization:campus_create' %}">{% icon "plus" 18 %} Campus</a>{% endif %}
+  </div>
+</div>
+
+{% for d in data %}
+<div class="card">
+  <div class="page-head" style="margin-bottom:8px">
+    <div><h2 style="margin:0">{{ d.region.name }}
+        {% if d.region.code %}<small class="muted">({{ d.region.code }})</small>{% endif %}
+        {% if d.region.is_external %}<span class="badge teacher">Oracle</span>{% else %}<span class="badge">Manual</span>{% endif %}
+        {% if not d.region.is_active %}<span class="badge off">Inactive</span>{% endif %}</h2>
+      <small class="muted">{{ d.campuses|length }} campus{{ d.campuses|length|pluralize:"es" }} · {{ d.students }} student{{ d.students|pluralize }}</small></div>
+    <div class="actions">
+      {% if can_manage %}<a class="btn ghost sm" href="{% url 'organization:campus_create' %}?region={{ d.region.pk }}">{% icon "plus" 16 %} Campus</a>{% endif %}
+      {% if can_manage and not d.region.is_external %}
+      <a class="btn ghost sm" href="{% url 'organization:region_edit' d.region.pk %}">{% icon "edit" 16 %}</a>
+      <form method="post" action="{% url 'organization:region_delete' d.region.pk %}" class="inline" onsubmit="return confirm('Delete this region?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="table-wrap"><table>
+    {% for c in d.campuses %}
+    <tr>
+      <td><b>{{ c.name }}</b> {% if c.code %}<small class="muted">({{ c.code }})</small>{% endif %}</td>
+      <td>{% if c.is_external %}<span class="badge teacher">Oracle</span>{% else %}<span class="badge">Manual</span>{% endif %}
+          {% if not c.is_active %}<span class="badge off">Inactive</span>{% endif %}</td>
+      <td><a href="{% url 'organization:student_list' %}?campus={{ c.pk }}">{{ c.n_students }} student{{ c.n_students|pluralize }}</a></td>
+      <td><div class="actions">
+        {% if can_manage and not c.is_external %}
+        <a class="btn ghost sm" href="{% url 'organization:campus_edit' c.pk %}">{% icon "edit" 16 %}</a>
+        <form method="post" action="{% url 'organization:campus_delete' c.pk %}" class="inline" onsubmit="return confirm('Delete this campus?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+        {% endif %}
+      </div></td>
+    </tr>
+    {% empty %}<tr><td class="empty">No campuses in this region yet.</td></tr>{% endfor %}
+  </table></div>
+</div>
+{% empty %}
+<div class="card empty">No regions yet. They will arrive from Oracle, or add one manually.</div>
+{% endfor %}
+
+{% if unassigned %}
+<div class="card"><b>{{ unassigned }}</b> student{{ unassigned|pluralize }} without a campus.
+  <a href="{% url 'organization:student_list' %}?campus=none">View</a></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ exam.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ exam.name }}</h1>
+  <p class="muted">{{ exam.school_class }} · {{ n_students }} student{{ n_students|pluralize }}{% if exam.start_date %} · {{ exam.start_date|date:"d M Y" }}{% endif %}
+    · {% if exam.is_published %}<b>Published</b>{% elif exam.marks_locked %}<b>Locked</b>{% else %}Marks open{% endif %}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn" href="{% url 'exams:students' exam.pk %}">{% icon "users" 18 %} Student-wise marks</a>
+    <a class="btn ghost" href="{% url 'exams:sheet' exam.pk %}">{% icon "clipboard" 18 %} Result sheet</a>
+    <a class="btn ghost" href="{% url 'exams:analysis' exam.pk %}">{% icon "sparkles" 18 %} Analysis &amp; AI</a>
+    {% if user.is_super_admin %}
+    <form method="post" action="{% url 'exams:toggle' exam.pk 'lock' %}" class="inline">{% csrf_token %}<button class="btn ghost">{% if exam.marks_locked %}Unlock marks{% else %}Lock marks{% endif %}</button></form>
+    <form method="post" action="{% url 'exams:toggle' exam.pk 'publish' %}" class="inline">{% csrf_token %}<button class="btn {% if exam.is_published %}ghost{% endif %}">{% if exam.is_published %}Unpublish{% else %}Publish results{% endif %}</button></form>
+    <a class="btn ghost" href="{% url 'exams:edit' exam.pk %}">{% icon "edit" 16 %}</a>{% endif %}
+  </div></div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0">Subject papers</h2>
+    {% if user.is_super_admin %}<a class="btn" href="{% url 'exams:paper_create' exam.pk %}">{% icon "plus" 18 %} Add paper</a>{% endif %}</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Subject</th><th>Teacher</th><th>Total</th><th>Pass</th><th>Date</th><th>Marks entered</th><th></th></tr></thead>
+    {% for x in papers %}
+    <tr><td><b>{{ x.paper.subject_name }}</b></td><td>{{ x.paper.course.teacher.display_name|default:"—" }}</td>
+      <td>{{ x.paper.total_marks|floatformat:"-2" }}</td><td>{{ x.paper.pass_marks|floatformat:"-2" }}</td><td>{{ x.paper.date|date:"d M"|default:"—" }}</td>
+      <td style="min-width:150px"><div class="bar"><i style="width:{% widthratio x.prog.entered x.prog.expected 100 %}%"></i></div><small class="muted">{{ x.prog.entered }} / {{ x.prog.expected }}</small></td>
+      <td style="text-align:right;white-space:nowrap">
+        {% if x.can_enter %}<a class="btn sm" href="{% url 'exams:marks' x.paper.pk %}">{% if exam.marks_locked %}View marks{% else %}Enter marks{% endif %}</a>{% endif %}
+        {% if user.is_super_admin %}<a class="btn ghost sm" href="{% url 'exams:paper_edit' x.paper.pk %}">{% icon "edit" 14 %}</a>
+        <form method="post" action="{% url 'exams:paper_delete' x.paper.pk %}" class="inline" onsubmit="return confirm('Remove this paper and its marks?')">{% csrf_token %}<button class="btn ghost sm">Remove</button></form>{% endif %}
+      </td></tr>
+    {% empty %}<tr><td colspan="7" class="empty">No papers yet.{% if user.is_super_admin %} Add each subject’s paper with its total and pass marks.{% endif %}</td></tr>{% endfor %}
+  </table></div>
+</div>
+{% if user.is_super_admin %}<form method="post" action="{% url 'exams:delete' exam.pk %}" onsubmit="return confirm('Delete this exam with all marks?')">{% csrf_token %}<button class="btn ghost sm">Delete exam</button></form>{% endif %}
+{% endblock %}

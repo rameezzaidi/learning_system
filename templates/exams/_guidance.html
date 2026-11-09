@@ -1,0 +1,20 @@
+{% load ui %}
+<div class="card guide">
+  <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
+    <h2 style="margin:0">{% icon "sparkles" 20 %} Suggestions, weak areas &amp; study plan</h2>
+    <span class="badge {% if saved.source == 'ai' %}student{% endif %}">{% if saved.source == 'ai' %}AI · {{ saved.model_name }}{% else %}Auto guidance{% endif %}</span>
+  </div>
+  {% if saved.error %}<p class="muted"><small>{{ saved.error }}</small></p>{% endif %}
+  {% include "exams/_guide_student.html" with g=guidance lang="en" part="head" %}
+  {% if guidance_ur %}{% include "exams/_guide_student.html" with g=guidance_ur lang="ur" part="head" %}{% endif %}
+  {% include "exams/_guide_subjects.html" with g=guidance %}
+  {% include "exams/_guide_student.html" with g=guidance lang="en" part="tail" %}
+  {% if guidance_ur %}{% include "exams/_guide_student.html" with g=guidance_ur lang="ur" part="tail" %}{% endif %}
+
+  {% if staff and ai_form %}
+  <form method="post" action="{% url 'exams:ai' exam.pk %}" class="no-print aibar" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Thinking…'">{% csrf_token %}
+    <input type="hidden" name="student" value="{{ student.pk }}">
+    <button class="btn sm">{% icon "sparkles" 16 %} {% if saved %}Regenerate{% else %}Generate{% endif %} with AI</button>
+    <small class="muted">{% if saved %}Summary in English + Urdu; each subject's plan in its own language (Urdu/Islamiat in Urdu).{% else %}Students and parents currently see the automatic guidance.{% endif %}</small>
+  </form>{% endif %}
+</div>

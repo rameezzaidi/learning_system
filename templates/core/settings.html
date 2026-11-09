@@ -1,0 +1,81 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Appearance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>School Appearance</h1><p class="muted">Choose how your school looks. Changes preview instantly; press Save to apply for everyone.</p></div>
+</div>
+
+<form method="post" id="settingsForm" class="split">{% csrf_token %}
+  <div>
+    <div class="card">
+      <h2>School identity</h2>
+      <div class="form-grid">
+        {% include "partials/field.html" with field=form.school_name %}
+        {% include "partials/field.html" with field=form.tagline %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Theme</h2>
+      <div class="theme-grid">
+        {% for radio in form.theme %}
+          {% with t=THEMES|get:radio.data.value %}
+          <label class="opt">
+            <input type="radio" name="theme" value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %}>
+            <span class="box">
+              <span class="swatches">{% for c in t.swatch %}<i style="background:{{ c }}"></i>{% endfor %}</span>
+              <b>{{ t.name }}</b><small>{{ t.desc }} · {{ t.mode }}</small>
+            </span>
+          </label>
+          {% endwith %}
+        {% endfor %}
+      </div>
+      {{ form.theme.errors }}
+    </div>
+
+    <div class="card">
+      <h2>Your school colours</h2>
+      <label class="check" style="margin-bottom:14px">{{ form.use_custom_colors }} Use my own brand colours instead of the theme colours</label>
+      <div id="customColors" style="display:flex;gap:28px;flex-wrap:wrap">
+        <div><label style="font-weight:600;display:block;margin-bottom:6px">Primary</label>{{ form.custom_primary }}</div>
+        <div><label style="font-weight:600;display:block;margin-bottom:6px">Accent</label>{{ form.custom_accent }}</div>
+      </div>
+      {{ form.custom_primary.errors }}{{ form.custom_accent.errors }}
+    </div>
+
+    <div class="card">
+      <h2>Style</h2>
+      <div class="field"><label>Font</label>
+        <div class="opt-row">{% for r in form.font_style %}<label class="opt"><input type="radio" name="font_style" value="{{ r.data.value }}" {% if r.data.selected %}checked{% endif %}><span class="box">{{ r.choice_label }}</span></label>{% endfor %}</div></div>
+      <div class="field"><label>Corners</label>
+        <div class="opt-row">{% for r in form.radius %}<label class="opt"><input type="radio" name="radius" value="{{ r.data.value }}" {% if r.data.selected %}checked{% endif %}><span class="box">{{ r.choice_label }}</span></label>{% endfor %}</div></div>
+      <div class="field"><label>Sidebar</label>
+        <div class="opt-row">{% for r in form.sidebar_style %}<label class="opt"><input type="radio" name="sidebar_style" value="{{ r.data.value }}" {% if r.data.selected %}checked{% endif %}><span class="box">{{ r.choice_label }}</span></label>{% endfor %}</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Personal themes</h2>
+      {% include "partials/field.html" with field=form.allow_user_theme %}
+    </div>
+    <div class="card">
+      <h2>Learning &amp; AI</h2>
+      {% include "partials/field.html" with field=form.auto_approve_nuggets %}
+      {% include "partials/field.html" with field=form.currency %}
+    </div>
+
+    <p style="margin-top:18px"><button class="btn">{% icon "check" 18 %} Save appearance</button></p>
+  </div>
+
+  <aside class="preview card">
+    <h3>Live preview</h3>
+    <div class="mini">
+      <div class="mbar">{{ school.school_name }}</div>
+      <div class="mbody">
+        <div class="mcard"><b>Class 8 · Mathematics</b><br><span class="muted">Quiz result: 86%</span></div>
+        <div class="mcard"><button type="button" class="btn sm">Primary button</button> <span class="badge teacher">Teacher</span> <span class="badge student">Student</span></div>
+      </div>
+    </div>
+    <p class="help">The whole page you are viewing also changes as you click.</p>
+  </aside>
+</form>
+{% endblock %}

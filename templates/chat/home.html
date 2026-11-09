@@ -1,0 +1,67 @@
+{% extends "base.html" %}{% load ui static %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<div class="chat {% if active %}has-active{% endif %}" id="chat" data-me="{{ user.pk }}" data-active="{{ active.conv.pk|default:'' }}"
+     data-group="{% if active.conv.is_group %}1{% endif %}"
+     data-u-messages="{% if active %}{% url 'chat:messages' active.conv.pk %}{% endif %}" data-u-send="{% if active %}{% url 'chat:send' active.conv.pk %}{% endif %}"
+     data-u-list="{% url 'chat:list_json' %}" data-u-people="{% url 'chat:people' %}" data-u-new="{% url 'chat:new' %}">
+
+  <aside class="chat-list">
+    <div class="cl-head"><h2>Chats</h2><button type="button" class="btn sm" id="newChat">{% icon "plus" 16 %} New</button></div>
+    <label class="cl-search">{% icon "search" 16 %}<input type="search" id="chatFilter" placeholder="Search chats" autocomplete="off"></label>
+    <div class="cl-items" id="chatItems">
+      {% for r in rows %}
+      <a class="cl-item {% if active and active.conv.pk == r.conv.pk %}on{% endif %}" href="{% url 'chat:thread' r.conv.pk %}" data-id="{{ r.conv.pk }}" data-name="{{ r.name|lower }}" data-ts="{{ r.last.created_at.isoformat|default:'' }}">
+        {% if r.conv.is_group %}<span class="avatar grp">{% icon "users" 20 %}</span>{% else %}{% avatar r.other %}{% endif %}
+        <div class="cl-main"><b>{{ r.name }}</b><small class="cl-prev">{% if r.last %}{% if r.last.sender_id == user.pk %}You: {% endif %}{% if r.last.body %}{{ r.last.body|truncatechars:48 }}{% else %}📎 Attachment{% endif %}{% else %}No messages yet{% endif %}</small></div>
+        <div class="cl-side"><small class="cl-time">{% if r.last %}{{ r.last.created_at|date:"H:i" }}{% endif %}</small><span class="cl-unread" {% if not r.unread %}hidden{% endif %}>{{ r.unread }}</span></div>
+      </a>
+      {% empty %}
+      <div class="cl-empty">{% icon "chat" 28 %}<b>No chats yet</b><span>Press <em>New</em> to start a conversation.</span></div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="chat-pane">
+    {% if active %}
+    <header class="cp-head">
+      <a class="cp-back" href="{% url 'chat:home' %}" aria-label="Back to chats">{% icon "back" 22 %}</a>
+      {% if active.conv.is_group %}<span class="avatar grp">{% icon "users" 20 %}</span>{% else %}{% avatar active.other %}{% endif %}
+      <div class="cp-title"><b>{{ active.name }}</b>
+        <small>{% if active.conv.is_group %}{{ members_n }} members{% else %}{{ active.other.get_role_display }}{% if active.other.about %} · {{ active.other.about|truncatechars:60 }}{% endif %}{% endif %}</small></div>
+      {% if show_profile %}
+        <a class="btn ghost sm" href="{% url 'organization:student_profile' active.other.pk %}">{% icon "user" 16 %} <span>Profile</span></a>{% endif %}
+    </header>
+    <div class="cp-msgs" id="msgs" aria-live="polite"></div>
+    <form class="cp-compose" id="composer" autocomplete="off">{% csrf_token %}
+      <div class="cp-file" id="fileChip" hidden><span id="fileName"></span><button type="button" id="fileClear" aria-label="Remove file">{% icon "close" 14 %}</button></div>
+      <div class="cp-row">
+        <label class="ic-btn" title="Attach a file">{% icon "clip" 20 %}<input type="file" id="fileInput" hidden></label>
+        <div class="emoji-wrap"><button type="button" class="ic-btn" id="emojiBtn" title="Emoji">{% icon "smile" 20 %}</button><div class="emoji-pop" id="emojiPop" hidden></div></div>
+        <textarea id="body" rows="1" maxlength="4000" placeholder="Write a message…" aria-label="Message"></textarea>
+        <button type="submit" class="send-btn" id="sendBtn" aria-label="Send">{% icon "send" 20 %}</button>
+      </div>
+    </form>
+    {{ msgs_json|json_script:"msgs-data" }}
+    {% else %}
+    <div class="cp-empty">
+      <div class="cp-empty-art">{% icon "chat" 40 %}</div>
+      <h2>Your messages</h2>
+      <p class="muted">Talk with your teachers, classmates and parents in one place. Pick a chat on the left or start a new one.</p>
+      <button type="button" class="btn" id="newChat2">{% icon "plus" 18 %} Start a chat</button>
+    </div>
+    {% endif %}
+  </section>
+
+  <div class="modal" id="newModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="New chat">
+      <div class="mc-head"><h2>New chat</h2><button type="button" class="ic-btn" id="mClose" aria-label="Close">{% icon "close" 20 %}</button></div>
+      <label class="cl-search">{% icon "search" 16 %}<input type="search" id="pSearch" placeholder="Search people" autocomplete="off"></label>
+      <div class="p-list" id="pList"><div class="cl-empty"><span>Loading…</span></div></div>
+      <div class="p-group" id="pGroup" hidden><input class="input" id="pTitle" maxlength="80" placeholder="Group name (optional)"></div>
+      <div class="mc-foot"><small class="muted" id="pCount">Select one person for a direct chat, or several for a group.</small><button type="button" class="btn" id="pStart" disabled>Start chat</button></div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

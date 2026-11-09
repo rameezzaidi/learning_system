@@ -1,0 +1,38 @@
+{% load ui %}
+<div class="rc">
+  <div class="rc-head">
+    <div><div class="rc-school">{{ school }}</div><div class="rc-title">Report Card · {{ exam.name }}</div></div>
+    <div class="rc-who"><b>{{ student.display_name }}</b><br><span>{{ exam.school_class }}{% if exam.start_date %} · {{ exam.start_date|date:"M Y" }}{% endif %}</span></div>
+  </div>
+  <div class="tiles-row">
+    <div class="tile-s"><small>Percentage</small><b>{% if row.pct is None %}—{% else %}{{ row.pct }}%{% endif %}</b></div>
+    <div class="tile-s"><small>Grade</small><b>{{ row.band.grade|default:"—" }}</b>{% if row.band.remark %}<em>{{ row.band.remark }}</em>{% endif %}</div>
+    <div class="tile-s"><small>GPA</small><b>{{ row.gpa|default_if_none:"—" }}</b></div>
+    <div class="tile-s"><small>Position</small><b>{{ row.rank|default:"—" }}</b><em>of {{ ins.n_ranked }}</em></div>
+    <div class="tile-s {% if row.result == 'FAIL' %}bad{% elif row.result == 'PASS' %}good{% endif %}"><small>Result</small><b>{{ row.result|title }}</b></div>
+    {% if ins.delta is not None %}<div class="tile-s {% if ins.delta < 0 %}bad{% else %}good{% endif %}"><small>vs {{ prev_exam.name|truncatechars:16 }}</small><b>{% if ins.delta > 0 %}+{% endif %}{{ ins.delta }}</b></div>{% endif %}
+  </div>
+
+  {% if chart %}<div class="rc-charts"><div class="chart-box"><h4>Subject-wise percentage</h4><div class="chart" data-chart='{{ chart }}'></div></div></div>{% endif %}
+
+  <div class="rc-table-wrap"><table class="rct">
+    <thead><tr><th>Subject</th><th class="r">Marks</th><th class="r">Out of</th><th class="r">Percentage</th><th>Grade</th><th>Remarks</th><th style="width:22%">You vs class average</th><th>Result</th></tr></thead>
+    {% for c in row.cells %}{% with s=subj|get:c.paper.subject_name %}
+    <tr class="{{ s.status }}">
+      <td><b>{{ c.paper.subject_name }}</b>{% if s.status == 'weak' %} <span class="chip bad">weak</span>{% elif s.status == 'strong' %} <span class="chip good">strong</span>{% endif %}
+        {% if s.declining %}<span class="chip bad">▼ {{ s.delta }}</span>{% elif s.improving %}<span class="chip good">▲ +{{ s.delta }}</span>{% endif %}</td>
+      {% if not c.entered %}<td colspan="7" class="muted">Marks pending</td>
+      {% else %}
+      <td class="r">{% if c.absent %}ABS{% else %}{{ c.marks|floatformat:"-2" }}{% endif %}</td><td class="r">{{ c.paper.total_marks|floatformat:"-2" }}</td>
+      <td class="r"><b>{% if c.absent %}—{% else %}{{ c.pct }}{% endif %}</b></td><td><b>{{ c.band.grade }}</b></td>
+      <td>{% if c.absent %}Absent{% else %}{{ c.band.remark }}{% endif %}{% if c.remarks %}<br><small class="muted">{{ c.remarks }}</small>{% endif %}</td>
+      <td>{% if not c.absent %}<div class="cmp"><i class="{{ s.status }}" style="width:{{ c.pct }}%"></i>{% if s.class_avg is not None %}<b style="left:{{ s.class_avg }}%" title="Class average {{ s.class_avg }}%"></b>{% endif %}</div>
+        <small class="muted">{% if s.class_avg is not None %}class avg {{ s.class_avg }}%{% endif %}</small>{% endif %}</td>
+      <td>{% if c.passed %}Pass{% else %}<b class="neg">Fail</b>{% endif %}</td>{% endif %}
+    </tr>{% endwith %}{% endfor %}
+    <tfoot><tr><td><b>Total</b></td><td class="r"><b>{{ row.total|floatformat:"-2" }}</b></td><td class="r"><b>{{ row.out_of|floatformat:"-2" }}</b></td><td class="r"><b>{{ row.pct|default_if_none:"" }}</b></td><td><b>{{ row.band.grade|default:"" }}</b></td><td><b>{{ row.band.remark }}</b></td><td></td><td><b>{{ row.result|title }}</b></td></tr></tfoot>
+  </table></div>
+  {% if row.pct is not None %}<div class="overall"><b>Overall: {{ row.total|floatformat:"-2" }} / {{ row.out_of|floatformat:"-2" }} = {{ row.pct }}%</b>
+    · Grade <b>{{ row.band.grade }}</b>{% if row.band.remark %} ({{ row.band.remark }}){% endif %}{% if row.rank %} · Position <b>{{ row.rank }}</b> of {{ ins.n_ranked }}{% endif %} · <b>{{ row.result|title }}</b></div>{% endif %}
+  <p class="muted" style="font-size:.78rem;margin:8px 0 0">Grading scale: {% for b in res.scale %}{{ b.grade }} ≥ {{ b.min_percent|floatformat:"-1" }}%{% if not forloop.last %}, {% endif %}{% endfor %}. Bar marker = class average.</p>
+</div>

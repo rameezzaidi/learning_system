@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}My timetable{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My timetable</h1><p class="muted">{{ g.count }} lessons a week.</p></div></div>
+{% with by_teacher=True %}{% include "timetable/_grid.html" %}{% endwith %}
+<div class="card" style="margin-top:16px"><h3>Cover duties (next 14 days)</h3><ul class="facts">
+  {% for c in cover %}<li><span>{{ c.date|date:"D d M" }} · {{ c.slot.school_class }} · {{ c.slot.period.name }} · {{ c.slot.course.subject.name }}</span><b>{% if c.date == today %}Today{% endif %}</b></li>
+  {% empty %}<li><span>No cover duties.</span></li>{% endfor %}</ul></div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Lesson planner{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Lesson planner</h1><p class="muted">A ready-to-edit lesson plan. Uses AI when your school has configured a provider; otherwise a built-in template. Only the subject, class and topic are sent. Always review before teaching.</p></div></div>
+<div class="grid g2"><form method="post" class="card">{% csrf_token %}
+  <label>Course<select class="select" name="course" required><option value="">Choose…</option>{% for c in courses %}<option value="{{ c.pk }}" {% if form.course == c.pk|stringformat:"s" %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+  <label>Topic<input class="input" name="topic" value="{{ form.topic }}" required maxlength="160"></label>
+  <div class="grid g2"><label>Length (minutes)<input class="input" type="number" name="minutes" min="20" max="120" value="{{ form.minutes }}"></label>
+    <label>Class level<select class="select" name="level"><option value="support" {% if form.level == "support" %}selected{% endif %}>Needs support</option><option value="mixed" {% if form.level == "mixed" %}selected{% endif %}>Mixed</option><option value="advanced" {% if form.level == "advanced" %}selected{% endif %}>Advanced</option></select></label></div>
+  <button class="btn" style="margin-top:10px">{% icon "sparkles" 18 %} Create plan</button></form>
+  {% if plan %}<div class="card"><h3>{{ plan.meta }}</h3><small class="muted">{% if plan.source == "ai" %}AI draft{% else %}Template{% endif %}</small>
+    <h4>Objectives</h4><ul>{% for x in plan.objectives %}<li>{{ x }}</li>{% endfor %}</ul><h4>Starter</h4><p>{{ plan.starter }}</p><h4>Main</h4><ul>{% for x in plan.main %}<li>{{ x }}</li>{% endfor %}</ul>
+    <h4>Check understanding</h4><p>{{ plan.check }}</p><h4>Differentiation</h4><ul>{% for x in plan.differentiation %}<li>{{ x }}</li>{% endfor %}</ul><h4>Homework</h4><p>{{ plan.homework }}</p><h4>Resources</h4><ul>{% for x in plan.resources %}<li>{{ x }}</li>{% endfor %}</ul>
+    <button class="btn ghost sm noprint" onclick="window.print()">Print</button></div>{% endif %}</div>
+{% endblock %}

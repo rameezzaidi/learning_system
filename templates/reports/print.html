@@ -1,0 +1,19 @@
+{% load static ui %}<!doctype html>
+<html lang="en" {% include "partials/theme_attrs.html" %}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta.title }}</title>
+  <link rel="stylesheet" href="{% static 'css/themes.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <style>@page { size: A4 landscape; margin: 10mm; } body { background: #fff; }</style>
+</head>
+<body class="print-body">
+  <div class="print-bar no-print">
+    <b>{{ total_pages }} page{{ total_pages|pluralize }}</b> ready to print. Choose "Save as PDF" in the print dialog to keep a copy.
+    <button class="btn sm" onclick="window.print()">Print</button>
+  </div>
+  {% for page_no, lines in pages_to_show %}{% include "reports/_paper.html" %}{% endfor %}
+  <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });</script>
+</body>
+</html>

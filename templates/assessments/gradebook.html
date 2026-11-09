@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Gradebook{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Gradebook · {{ course.subject }}</h1>
+  <p class="muted">{{ course.school_class }} · Best attempt per assessment{% if class_avg is not None %} · Class average {{ class_avg }}%{% endif %}</p></div>
+  <div style="display:flex;gap:8px"><a class="btn ghost" href="{% url 'assessments:gradebook_csv' course.pk %}">Export CSV</a>
+    <a class="btn ghost" href="{% url 'academics:course_detail' course.pk %}">Course</a></div></div>
+<div class="card table-wrap"><table class="gb">
+  <thead><tr><th>Student</th>{% for a in assessments %}<th class="r"><a href="{% url 'assessments:results' a.pk %}">{{ a.title }}</a></th>{% endfor %}<th class="r">Average</th><th class="r">Grade</th></tr></thead>
+  {% for r in rows %}
+  <tr><td><b>{{ r.student.display_name }}</b></td>
+    {% for c in r.cells %}<td class="r {% if c.pct is not None and c.pct < 50 %}low{% endif %}">{% if c.pct is None %}<span class="muted">—</span>{% else %}{{ c.pct }}%{% if c.pending %}*{% endif %}{% endif %}</td>{% endfor %}
+    <td class="r"><b>{% if r.avg is None %}—{% else %}{{ r.avg }}%{% endif %}</b></td><td class="r"><span class="badge {% if r.letter == 'F' %}off{% elif r.letter != '—' %}student{% endif %}">{{ r.letter }}</span></td></tr>
+  {% empty %}<tr><td class="empty">No students in this class.</td></tr>{% endfor %}
+</table>
+{% if not assessments %}<p class="empty">No published assessments yet.</p>{% else %}<small class="muted">* contains answers not marked yet.</small>{% endif %}
+</div>
+{% endblock %}

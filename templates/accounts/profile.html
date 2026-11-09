@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My Profile</h1><p class="muted">{{ user.get_role_display }} · @{{ user.username }}</p></div>
+  {% if user.is_student %}<a class="btn ghost" href="{% url 'organization:student_profile' user.pk %}">{% icon "user" 18 %} Academic profile</a>{% endif %}<a class="btn ghost" href="{% url 'accounts:password' %}">{% icon "key" 18 %} Change password</a></div>
+<form method="post" enctype="multipart/form-data" class="card" style="max-width:720px">{% csrf_token %}
+  <div class="avatar-edit">{% avatar user "xl" %}<div><b>Profile photo</b><p class="help" style="margin:2px 0 8px">Shown in chat and on your profile. JPG or PNG, up to 3 MB.</p>{{ form.avatar }}{{ form.avatar.errors }}</div></div>
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.first_name %}
+    {% include "partials/field.html" with field=form.last_name %}
+    {% include "partials/field.html" with field=form.email %}
+    {% include "partials/field.html" with field=form.phone %}
+  </div>
+  {% include "partials/field.html" with field=form.about %}
+  {% if allow_theme %}
+    {% include "partials/field.html" with field=form.theme %}
+    <p class="help" style="margin-top:-8px;margin-bottom:16px">Only changes how you see the app. Pick "Use school default" to follow your school's look.</p>
+  {% endif %}
+  <button class="btn">{% icon "check" 18 %} Save changes</button>
+</form>
+{% endblock %}

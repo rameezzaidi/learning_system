@@ -1,0 +1,14 @@
+{% load static ui %}<!doctype html>
+<html lang="en" {% include "partials/theme_attrs.html" %}>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verification · {{ school.school_name }}</title>
+<link rel="stylesheet" href="{% static 'css/themes.css' %}"><link rel="stylesheet" href="{% static 'css/app.css' %}"><link rel="stylesheet" href="{% static 'css/premium.css' %}"></head>
+<body style="display:grid;place-items:center;min-height:100vh;padding:16px">
+<form method="post" class="card" style="max-width:420px;width:100%">{% csrf_token %}
+  <h2>Two-step verification</h2>
+  <p class="muted">Enter the 6-digit code from your authenticator app for <b>{{ username }}</b>, or one of your backup codes.</p>
+  {% if error %}<div class="msg error" role="alert">{{ error }}</div>{% endif %}
+  <label>Code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus required maxlength="20"></label>
+  <button class="btn block" style="margin-top:12px">Verify and sign in</button>
+  <p style="margin-top:12px"><a href="{% url 'accounts:login' %}">Back to sign in</a></p>
+</form></body></html>

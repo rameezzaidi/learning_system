@@ -1,0 +1,10 @@
+{% load ui %}
+<a class="ng-card {% if r.status == 'done' %}done{% endif %}" href="{% url 'nuggets:play' r.nugget.pk %}">
+  <div class="ng-top"><span class="ng-subj">{{ r.nugget.course.subject.name }}</span>
+    {% if r.due %}<span class="badge due-b">🔁 Revise</span>{% elif r.status == 'done' %}<span class="badge student">✓ Mastered</span>{% elif not r.seen %}<span class="badge new-b">New</span>{% endif %}</div>
+  <h3>{{ r.nugget.title }}</h3>
+  {% if r.reason %}<p class="ng-why">{% icon "sparkles" 14 %} {{ r.reason }}</p>{% endif %}
+  <div class="ng-meta"><span>⏱ {{ r.nugget.minutes }} min</span><span>{{ r.nugget.get_difficulty_display }}</span>
+    {% if r.score is not None %}<span>Best {{ r.score|floatformat:0 }}%</span>{% endif %}
+    {% if r.nugget.source != 'manual' %}<span class="ng-src">{{ r.nugget.get_source_display }}</span>{% endif %}</div>
+</a>

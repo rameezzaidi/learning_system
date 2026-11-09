@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Timetable{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Timetable</h1><p class="muted">Choose a class.</p></div>
+  {% if is_teacher %}<a class="btn" href="{% url 'timetable:mine' %}">{% icon "calendar" 18 %} My timetable</a>{% endif %}</div>
+<div class="card table-wrap"><table><thead><tr><th>Class</th><th>Campus</th><th></th></tr></thead>
+  {% for c in classes %}<tr><td><b>{{ c }}</b></td><td>{{ c.campus.name|default:"Whole school" }}</td><td><a class="btn ghost sm" href="{% url 'timetable:class' c.pk %}">View</a></td></tr>
+  {% empty %}<tr><td colspan="3" class="empty">No classes available.</td></tr>{% endfor %}</table></div>
+{% endblock %}

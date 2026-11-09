@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ req.subject }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ req.subject }}</h1>
+  <p class="muted">{{ req.course.subject }} · {{ req.course.school_class }} · {{ req.student.display_name }}
+    {% if req.lesson %}· about <a href="{% url 'academics:lesson_view' req.lesson.pk %}">{{ req.lesson.title }}</a>{% endif %}</p></div>
+  <div style="display:flex;gap:8px"><span class="badge {% if req.status == 'open' %}teacher{% elif req.status == 'answered' %}student{% endif %}">{{ req.get_status_display }}</span>
+    <a class="btn ghost" href="{% url 'academics:help_list' %}">Back</a></div></div>
+<div class="thread">
+  {% for m in msgs %}
+  <div class="msg {% if m.author_id == req.student_id %}mine-s{% else %}mine-t{% endif %}">
+    <div class="who"><div class="avatar">{{ m.author|initials }}</div><div><b>{{ m.author.display_name }}</b><small>{% if m.author_id == req.student_id %}Student{% else %}Teacher{% endif %} · {{ m.created_at|date:"d M, H:i" }}</small></div></div>
+    <div class="prose">{{ m.body }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% if req.status != "resolved" %}
+<form method="post" class="card" style="max-width:760px">{% csrf_token %}
+  <textarea class="input" name="body" rows="3" required placeholder="{% if manage %}Write your answer…{% else %}Add more details or a follow-up…{% endif %}"></textarea>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <button class="btn">{% icon "check" 18 %} Send</button>
+    <button class="btn ghost" name="resolve" value="1" formnovalidate>Mark as resolved</button>
+  </div>
+</form>
+{% else %}<p class="muted">This question is resolved. Ask a new question from the course page if you need more help.</p>{% endif %}
+{% endblock %}

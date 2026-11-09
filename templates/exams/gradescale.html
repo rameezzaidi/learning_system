@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Grade scale{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Grade scale</h1><p class="muted">A percentage earns the highest grade whose minimum it reaches. Used by report cards, gradebook and quizzes.</p></div>
+  <a class="btn ghost" href="{% url 'exams:list' %}">Back</a></div>
+<div class="grid g2" style="align-items:start">
+  <div class="card table-wrap"><table><thead><tr><th>Grade</th><th>From %</th><th>GPA</th><th>Remark</th><th></th></tr></thead>
+    {% for b in bands %}<tr><td><b>{{ b.grade }}</b></td><td>{{ b.min_percent|floatformat:"-2" }}</td><td>{{ b.points }}</td><td>{{ b.remark }}</td>
+      <td style="text-align:right"><a class="btn ghost sm" href="{% url 'exams:gradeband_edit' b.pk %}">{% icon "edit" 14 %}</a>
+        <form method="post" action="{% url 'exams:gradeband_delete' b.pk %}" class="inline">{% csrf_token %}<button class="btn ghost sm">Delete</button></form></td></tr>{% endfor %}
+  </table></div>
+  <form method="post" class="card">{% csrf_token %}<h3 style="margin-top:0">Add a grade</h3>{{ form.non_field_errors }}
+    {% for field in form %}{% include "partials/field.html" with field=field %}{% endfor %}<button class="btn">{% icon "plus" 18 %} Add</button></form>
+</div>
+{% endblock %}

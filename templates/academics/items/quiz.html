@@ -1,0 +1,15 @@
+{% load ui %}
+{% if lesson.content %}<div class="prose" style="margin-bottom:14px">{{ lesson.content }}</div>{% endif %}
+{% if quiz %}
+  <div class="score" style="margin-bottom:6px">
+    <div><b>{{ quiz.title }}</b><br><small class="muted">{{ quiz.get_kind_display }}{% if quiz.duration_minutes %} · {{ quiz.duration_minutes }} min{% endif %} · {{ quiz_left }} attempt{{ quiz_left|pluralize }} left</small></div>
+    {% if quiz_best %}<span class="badge student">Best: {{ quiz_best.percent }}%</span> <a class="btn ghost sm" href="{% url 'assessments:result' quiz_best.pk %}">View result</a>{% endif %}
+    {% if quiz_open and quiz_left > 0 %}
+    <form method="post" action="{% url 'assessments:start' quiz.pk %}" class="inline">{% csrf_token %}<button class="btn">{% if quiz_best %}Try again{% else %}Start quiz{% endif %}</button></form>
+    {% elif not quiz_best %}<span class="badge off">Not available</span>{% endif %}
+  </div>
+  {% if done %}<span class="badge student">Completed</span>{% endif %}
+{% elif lesson.assessment %}
+  <p><a class="btn" href="{% url 'assessments:detail' lesson.assessment.pk %}">Open quiz settings</a></p>
+  <p class="muted"><small>Students complete this item by submitting “{{ lesson.assessment.title }}”.</small></p>
+{% else %}<p class="muted">No quiz linked yet.</p>{% endif %}

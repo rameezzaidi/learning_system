@@ -1,0 +1,13 @@
+{# one language of a student's guidance. needs: g, lang ("en"/"ur"), part ("head" | "tail"), staff #}
+<section class="gblock {% if lang == 'ur' %}urs{% endif %}" {% if lang == 'ur' %}dir="rtl" lang="ur"{% endif %}>
+  <h3 class="gl">{% if lang == "ur" %}اردو{% else %}English{% endif %}</h3>
+{% if part == "head" %}
+  <p style="margin:6px 0 0">{{ g.summary }}</p>
+{% else %}
+  {% if g.strengths %}<h3>{% if lang == "ur" %}مضبوط پہلو{% else %}Strengths{% endif %}</h3><ul>{% for s in g.strengths %}<li>{{ s }}</li>{% endfor %}</ul>{% endif %}
+  {% if g.action_plan %}<h3>{% if lang == "ur" %}عمومی ہدایات{% else %}General habits{% endif %}</h3><ol>{% for s in g.action_plan %}<li>{{ s }}</li>{% endfor %}</ol>{% endif %}
+  {% if g.parent_note %}<h3>{% if lang == "ur" %}والدین کے لیے نوٹ{% else %}Note for parents{% endif %}</h3><p>{{ g.parent_note }}</p>{% endif %}
+  {% if staff and g.teacher_note %}<h3 class="no-print">{% if lang == "ur" %}استاد کے لیے نوٹ{% else %}Note for teachers{% endif %}</h3><p class="no-print">{{ g.teacher_note }}</p>{% endif %}
+  {% if g.motivation %}<p class="quote">{{ g.motivation }}</p>{% endif %}
+{% endif %}
+</section>

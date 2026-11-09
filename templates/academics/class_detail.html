@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ cls }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ cls }}</h1><p class="muted">{{ cls.academic_year|default:"No academic year set" }}</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn ghost" href="{% url 'academics:class_list' %}">All classes</a>
+    <a class="btn ghost" href="{% url 'academics:class_edit' cls.pk %}">{% icon "edit" 18 %} Edit</a>
+    <form method="post" action="{% url 'academics:class_delete' cls.pk %}" class="inline" onsubmit="return confirm('Delete this class with its courses and lessons?')">{% csrf_token %}
+      <button class="btn danger">Delete</button></form>
+  </div>
+</div>
+
+<div class="grid g2" style="align-items:start">
+  <div class="card">
+    <div class="page-head" style="margin-bottom:10px"><h2>Subjects &amp; teachers</h2>
+      <a class="btn sm" href="{% url 'academics:course_create' cls.pk %}">{% icon "plus" 16 %} Add subject</a></div>
+    <div class="table-wrap"><table>
+      {% for c in courses %}
+      <tr>
+        <td><a href="{% url 'academics:course_detail' c.pk %}"><b>{{ c.subject }}</b></a><br><small class="muted">{{ c.n_lessons }} lesson{{ c.n_lessons|pluralize }}</small></td>
+        <td>{% if c.teacher %}{{ c.teacher.display_name }}{% else %}<span class="badge off">No teacher</span>{% endif %}</td>
+        <td><div class="actions">
+          <a class="btn ghost sm" href="{% url 'academics:course_edit' c.pk %}">{% icon "edit" 16 %}</a>
+          <form method="post" action="{% url 'academics:course_delete' c.pk %}" class="inline" onsubmit="return confirm('Remove this subject from the class?')">{% csrf_token %}
+            <button class="btn ghost sm">Remove</button></form>
+        </div></td>
+      </tr>
+      {% empty %}<tr><td class="empty">No subjects added yet.</td></tr>{% endfor %}
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>Students ({{ students|length }})</h2>
+    <div class="table-wrap"><table>
+      {% for s in students %}
+      <tr>
+        <td><div class="who"><div class="avatar">{{ s|initials }}</div><div><b>{{ s.display_name }}</b><small>@{{ s.username }}</small></div></div></td>
+        <td><div class="actions">
+          <form method="post" action="{% url 'academics:unenroll' cls.pk s.pk %}" class="inline">{% csrf_token %}<button class="btn ghost sm">Remove</button></form>
+        </div></td>
+      </tr>
+      {% empty %}<tr><td class="empty">No students enrolled.</td></tr>{% endfor %}
+    </table></div>
+
+    <form method="post" action="{% url 'academics:enroll' cls.pk %}" style="margin-top:16px">{% csrf_token %}
+      {% include "partials/field.html" with field=enroll_form.students %}
+      <button class="btn sm">{% icon "plus" 16 %} Enrol selected</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

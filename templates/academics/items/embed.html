@@ -1,0 +1,6 @@
+{% load ui %}
+{% if lesson.content %}<div class="prose" style="margin-bottom:14px">{{ lesson.content }}</div>{% endif %}
+<div class="frame"><iframe src="{{ lesson.url }}" loading="lazy" allowfullscreen
+  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+  referrerpolicy="no-referrer"></iframe></div>
+<p class="muted"><small>If the activity does not load, <a href="{{ lesson.url }}" target="_blank" rel="noopener">open it in a new tab</a>.</small></p>

@@ -1,0 +1,10 @@
+{% load ui %}
+<div class="card table-wrap"><table class="tt">
+  <thead><tr><th>Period</th>{% for d in g.days %}<th>{{ d.1 }}</th>{% endfor %}</tr></thead>
+  {% for row in g.rows %}<tr class="{% if row.period.is_break %}tt-break{% endif %}">
+    <th><b>{{ row.period.name }}</b><small>{{ row.period.start_time|time:"H:i" }}–{{ row.period.end_time|time:"H:i" }}</small></th>
+    {% if row.period.is_break %}<td colspan="{{ g.days|length }}" class="tt-breaktxt">Break</td>
+    {% else %}{% for s in row.cells %}<td>{% if s %}<b>{{ s.course.subject.name }}</b>
+      <small>{% if by_teacher %}{{ s.school_class }}{% else %}{{ s.course.teacher.display_name|default:"No teacher" }}{% endif %}{% if s.room %} · {{ s.room }}{% endif %}</small>{% else %}<span class="muted">—</span>{% endif %}</td>{% endfor %}{% endif %}
+  </tr>{% empty %}<tr><td colspan="{{ g.days|length|add:1 }}" class="empty">The bell schedule is not set up yet.</td></tr>{% endfor %}
+</table></div>

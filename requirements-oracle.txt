@@ -1,0 +1,3 @@
+# Only needed for the real Oracle sync (organization.sync_oracle). Demo mode ORACLE_MOCK=1 does not need it.
+-r requirements.txt
+oracledb>=2.0

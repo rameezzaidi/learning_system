@@ -1,0 +1,12 @@
+.env
+db.sqlite3
+media/
+private/
+__pycache__/
+*.pyc
+docs/
+run.bat
+run.ps1
+Dockerfile
+docker-compose.yml
+node_modules/

@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="welcome">
+  <div class="w-text"><p class="w-date">{% now "l, j F Y" %}</p><h1>Welcome, {{ user.first_name|default:user.username }}</h1><p class="w-sub">Here is a snapshot of your school.</p></div>
+  <div class="w-act"><a class="btn" href="{% url 'accounts:user_create' %}">{% icon "plus" 18 %} Add user</a></div>
+</section>
+
+<div class="grid g4 kpis">
+  <a class="kpi" style="--h:var(--primary)" href="{% url 'accounts:user_list' %}"><span class="kpi-ic">{% icon "users" 22 %}</span><b>{{ total }}</b><span class="kpi-l">Total users</span><small>{{ active }} active</small></a>
+  <a class="kpi" style="--h:#8b5cf6" href="{% url 'accounts:user_list' %}?role=teacher"><span class="kpi-ic">{% icon "book" 22 %}</span><b>{{ counts.teacher|default:0 }}</b><span class="kpi-l">Teachers</span><small>{{ n_subjects }} subjects</small></a>
+  <a class="kpi" style="--h:#10b981" href="{% url 'organization:student_list' %}"><span class="kpi-ic">{% icon "school" 22 %}</span><b>{{ counts.student|default:0 }}</b><span class="kpi-l">Students</span><small>{{ n_classes }} class{{ n_classes|pluralize:"es" }}</small></a>
+  <a class="kpi" style="--h:#f59e0b" href="{% url 'accounts:user_list' %}?role=parent"><span class="kpi-ic">{% icon "user" 22 %}</span><b>{{ counts.parent|default:0 }}</b><span class="kpi-l">Parents</span><small>linked to students</small></a>
+</div>
+
+<div class="quick">
+  <a href="{% url 'accounts:user_create' %}">{% icon "plus" 20 %}<span>Add user</span></a>
+  <a href="{% url 'academics:class_create' %}">{% icon "school" 20 %}<span>New class</span></a>
+  <a href="{% url 'exams:list' %}">{% icon "clipboard" 20 %}<span>Examinations</span></a>
+  <a href="{% url 'reports:students' %}">{% icon "chart" 20 %}<span>Student report</span></a>
+  <a href="{% url 'organization:sync' %}">{% icon "power" 20 %}<span>Oracle sync</span></a>
+  <a href="{% url 'core:settings' %}">{% icon "palette" 20 %}<span>Appearance</span></a>
+</div>
+
+<div class="setup">
+  <a href="{% url 'organization:overview' %}"><b>{{ n_regions }}</b> Regions</a>
+  <a href="{% url 'organization:overview' %}"><b>{{ n_campuses }}</b> Campuses</a>
+  <a href="{% url 'academics:class_list' %}"><b>{{ n_classes }}</b> Class{{ n_classes|pluralize:"es" }}</a>
+  <a href="{% url 'academics:subject_list' %}"><b>{{ n_subjects }}</b> Subjects</a>
+  <span><b>{{ n_lessons }}</b> Lessons</span>
+  <a href="{% url 'organization:sync' %}" class="sync {% if last_sync and last_sync.status == 'success' %}ok{% endif %}"><i></i>{% if last_sync %}Oracle sync {{ last_sync.get_status_display|lower }} · {{ last_sync.started_at|date:"d M H:i" }}{% else %}Oracle sync never run{% endif %}</a>
+</div>
+
+<div class="grid g3 charts">
+  <div class="card"><div class="ch-head"><h2>Users by role</h2></div><div class="chart" data-chart='{{ ch_roles }}'></div></div>
+  <div class="card"><div class="ch-head"><h2>Students by region</h2></div><div class="chart" data-chart='{{ ch_regions }}'></div></div>
+  <div class="card"><div class="ch-head"><h2>Exam averages</h2></div>{% if ch_trend %}<div class="chart" data-chart='{{ ch_trend }}'></div>{% else %}<div class="ch-empty">Averages appear after the first exam.</div>{% endif %}</div>
+</div>
+
+
+<div class="grid g2 split-cards" style="align-items:start">
+  <div class="card">
+    <div class="ch-head"><h2>Needs attention</h2>{% if unassigned %}<span class="badge warn">{{ unassigned|length }}</span>{% endif %}</div>
+    {% for c in unassigned %}
+      <div class="lesson-row"><div class="grow"><b>{{ c.subject }}</b> · {{ c.school_class }}<br><small class="muted">No teacher assigned</small></div>
+        <a class="btn ghost sm" href="{% url 'academics:course_edit' c.pk %}">Assign</a></div>
+    {% empty %}<div class="all-good">{% icon "sparkles" 22 %}<b>All clear</b><span>Every course has a teacher.</span></div>{% endfor %}
+  </div>
+  <div class="card">
+    <div class="ch-head"><h2>Recently added</h2><a class="link-sm" href="{% url 'accounts:user_list' %}">View all</a></div>
+    <ul class="people">
+      {% for u in recent %}
+      <li><span class="avatar">{{ u|initials }}</span><div class="grow"><b>{{ u.display_name }}</b><small>@{{ u.username }}</small></div>
+        <span class="badge {{ u.role }}">{{ u.get_role_display }}</span><small class="when">{{ u.date_joined|date:"d M" }}</small></li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Set up two-step sign-in{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Set up two-step sign-in</h1></div></div>
+<div class="card" style="max-width:560px">
+  <ol><li>Open your authenticator app and add an account with <b>Enter a setup key</b> (time-based).</li>
+  <li>Account name: <b>{{ user.username }}</b>. Key:<br><code style="font-size:1.1rem;letter-spacing:.08em;word-break:break-all">{{ secret }}</code></li>
+  <li>Enter the 6-digit code the app shows.</li></ol>
+  <p class="muted"><small>Phone with the app installed? <a href="{{ uri }}">Open it directly</a>.</small></p>
+  <form method="post">{% csrf_token %}<label>6-digit code<input class="input" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+    <button class="btn" style="margin-top:8px">Turn on</button> <a class="btn ghost" href="{% url 'accounts:security' %}">Cancel</a></form>
+</div>
+{% endblock %}

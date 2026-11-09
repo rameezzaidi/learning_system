@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Fees{% endblock %}
+{% block content %}
+{% with cur=school.currency %}
+<div class="page-head"><div><h1>Fees</h1><p class="muted">Monthly fees are added to every student's ledger automatically. Outstanding = billed minus paid, all months.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn ghost" href="?format=csv&q={{ q }}&campus={{ campus }}">{% icon "chart" 18 %} Export defaulters</a>
+    {% if can_manage %}<a class="btn ghost" href="{% url 'fees:defaults' %}">{% icon "settings" 18 %} Class fees</a>
+    <form method="post" action="{% url 'fees:generate' %}" class="inline">{% csrf_token %}<input type="hidden" name="month" value="{{ month_value }}"><button class="btn">{% icon "plus" 18 %} Generate {{ d.month|date:"M Y" }}</button></form>{% endif %}
+  </div></div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:var(--primary)"><span class="kpi-ic">{% icon "clipboard" 22 %}</span><b>{{ cur }} {{ d.billed|floatformat:"-2g" }}</b><span class="kpi-l">Billed in {{ d.month|date:"F Y" }}</span></div>
+  <div class="kpi" style="--h:#10b981"><span class="kpi-ic">{% icon "check" 22 %}</span><b>{{ cur }} {{ d.collected|floatformat:"-2g" }}</b><span class="kpi-l">Collected in {{ d.month|date:"F Y" }}</span></div>
+  <div class="kpi" style="--h:#f43f5e"><span class="kpi-ic">{% icon "bell" 22 %}</span><b>{{ cur }} {{ d.outstanding|floatformat:"-2g" }}</b><span class="kpi-l">Total outstanding</span></div>
+  <div class="kpi" style="--h:#f59e0b"><span class="kpi-ic">{% icon "users" 22 %}</span><b>{{ n_def }}</b><span class="kpi-l">Students with a balance</span></div>
+</div>
+<form class="toolbar" method="get" style="margin-top:16px">
+  <input class="input" style="max-width:220px" name="q" value="{{ q }}" placeholder="Name or admission no">
+  <select class="select" style="max-width:200px" name="campus"><option value="">All campuses</option>{% for c in campuses %}<option value="{{ c.pk }}" {% if campus == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <input class="input" type="month" style="max-width:170px" name="month" value="{{ month_value }}" aria-label="Month">
+  <button class="btn ghost">Apply</button>
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Student</th><th>Campus</th><th>Monthly fee</th><th style="text-align:right">Outstanding</th><th></th></tr></thead>
+  {% for u, bal, monthly in defaulters %}<tr>
+    <td><div class="who">{% avatar u %}<div><a href="{% url 'fees:ledger' u.pk %}"><b>{{ u.display_name }}</b></a><small>{{ u.student_profile.admission_no|default:"" }}</small></div></div></td>
+    <td>{{ u.student_profile.campus.name|default:"—" }}</td><td>{% if monthly is not None %}{{ cur }} {{ monthly|floatformat:"-2g" }}{% else %}—{% endif %}</td>
+    <td style="text-align:right"><b>{{ cur }} {{ bal|floatformat:"-2g" }}</b></td>
+    <td><a class="btn ghost sm" href="{% url 'fees:ledger' u.pk %}">Ledger</a></td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">No student has an outstanding balance.</td></tr>{% endfor %}
+</table></div>
+{% if n_def > 100 %}<p class="muted"><small>Showing the 100 largest of {{ n_def }}. Export for the full list.</small></p>{% endif %}
+{% endwith %}
+{% endblock %}

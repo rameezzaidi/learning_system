@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1></div><a class="btn ghost" href="{% url 'accounts:user_list' %}">Back</a></div>
+<form method="post" class="card" style="max-width:820px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.first_name %}
+    {% include "partials/field.html" with field=form.last_name %}
+    {% include "partials/field.html" with field=form.username %}
+    {% include "partials/field.html" with field=form.email %}
+    {% include "partials/field.html" with field=form.phone %}
+    {% include "partials/field.html" with field=form.role %}
+    {% if form.password1 %}
+      {% include "partials/field.html" with field=form.password1 %}
+      {% include "partials/field.html" with field=form.password2 %}
+    {% else %}
+      {% include "partials/field.html" with field=form.new_password %}
+    {% endif %}
+  </div>
+  <div class="form-grid" id="scopeBox">
+    {% include "partials/field.html" with field=form.region %}
+    {% include "partials/field.html" with field=form.campus %}
+  </div>
+  <div id="childrenBox">{% include "partials/field.html" with field=form.children %}</div>
+  {% include "partials/field.html" with field=form.is_active %}
+  <button class="btn">{% icon "check" 18 %} Save</button>
+</form>
+<script>
+  (function () {
+    var role = document.getElementById("id_role"), box = document.getElementById("childrenBox");
+    var sc = document.getElementById("scopeBox");
+    function sync() {
+      box.style.display = role.value === "parent" ? "" : "none";
+      sc.style.display = ["regional_director", "principal", "teacher"].indexOf(role.value) >= 0 ? "" : "none";
+    }
+    role.addEventListener("change", sync); sync();
+  })();
+</script>
+{% endblock %}

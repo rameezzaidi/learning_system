@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1><p class="muted">Manually added students are never changed by the Oracle sync.</p></div>
+  <a class="btn ghost" href="{% url 'organization:student_list' %}">Back</a></div>
+<form method="post" class="card" style="max-width:760px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.first_name %}
+    {% include "partials/field.html" with field=form.last_name %}
+    {% include "partials/field.html" with field=form.username %}
+    {% include "partials/field.html" with field=form.admission_no %}
+    {% include "partials/field.html" with field=form.campus %}
+    {% include "partials/field.html" with field=form.password %}
+    {% include "partials/field.html" with field=form.email %}
+    {% include "partials/field.html" with field=form.phone %}
+  </div>
+  <button class="btn">{% icon "check" 18 %} Save student</button>
+</form>
+{% endblock %}

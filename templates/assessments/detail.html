@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ a.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ a.title }}</h1>
+    <p class="muted">{{ a.course.subject }} · {{ a.course.school_class }} · {{ a.get_kind_display }} ·
+      {{ questions|length }} question{{ questions|length|pluralize }} · {{ a.total_points|floatformat:"-2" }} points
+      {% if a.duration_minutes %}· {{ a.duration_minutes }} min{% endif %} · {{ a.max_attempts }} attempt{{ a.max_attempts|pluralize }}
+      {% if a.due_at %}· due {{ a.due_at|date:"d M Y, H:i" }}{% endif %}</p>
+    {% if a.instructions %}<p>{{ a.instructions }}</p>{% endif %}
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    {% if a.is_published %}<span class="badge student">Published</span>{% else %}<span class="badge">Draft</span>{% endif %}
+    <form method="post" action="{% url 'assessments:toggle' a.pk %}" class="inline">{% csrf_token %}
+      <button class="btn {% if a.is_published %}ghost{% endif %}">{% if a.is_published %}Unpublish{% else %}Publish{% endif %}</button></form>
+    <a class="btn ghost" href="{% url 'assessments:edit' a.pk %}">{% icon "edit" 16 %} Settings</a>
+    <a class="btn ghost" href="{% url 'assessments:results' a.pk %}">Results ({{ n_attempts }}){% if pending %} · {{ pending }} to mark{% endif %}</a>
+  </div>
+</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <h2 style="margin:0">Questions</h2>
+    <a class="btn" href="{% url 'assessments:question_create' a.pk %}">{% icon "plus" 18 %} Add question</a>
+  </div>
+  {% for q in questions %}
+  <div class="lesson-row" style="align-items:flex-start">
+    <span class="num">{{ forloop.counter }}</span>
+    <div class="grow">
+      <div>{{ q.text|linebreaksbr }}</div>
+      <small class="muted">{{ q.get_kind_display }} · {{ q.points|floatformat:"-2" }} pt{{ q.points|pluralize }}</small>
+      {% if q.kind == "mcq" or q.kind == "tf" %}
+      <ul class="opts">{% for c in q.choices.all %}<li class="{% if c.is_correct %}ok{% endif %}">{{ c.text }}{% if c.is_correct %} ✓{% endif %}</li>{% endfor %}</ul>
+      {% elif q.kind == "short" %}<div class="muted"><small>Accepted: {{ q.accepted }}</small></div>
+      {% else %}<div class="muted"><small>Marked by the teacher.</small></div>{% endif %}
+    </div>
+    <a class="btn ghost sm" href="{% url 'assessments:question_edit' q.pk %}">{% icon "edit" 16 %}</a>
+    <form method="post" action="{% url 'assessments:question_delete' q.pk %}" class="inline" onsubmit="return confirm('Delete this question?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+  </div>
+  {% empty %}<p class="empty">No questions yet — add the first one.</p>{% endfor %}
+</div>
+<form method="post" action="{% url 'assessments:delete' a.pk %}" onsubmit="return confirm('Delete this assessment and all attempts?')">{% csrf_token %}
+  <button class="btn ghost sm">Delete assessment</button></form>
+{% include "partials/subject_ui.html" with name=a.course.subject.name %}
+{% endblock %}

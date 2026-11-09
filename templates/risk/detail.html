@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Alert · {{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ student.display_name }} <span class="badge lvl-{{ a.level }}">{{ a.get_level_display }}</span></h1>
+  <p class="muted">{{ cls|default:"No class" }} · {{ a.get_status_display }} · possible risk, to be checked by a person.</p></div>
+  <a class="btn ghost" href="{% url 'risk:index' %}">Back</a></div>
+<div class="grid g2">
+  <div>
+    <div class="card"><h3>Warning signs</h3><ul class="reasons">{% for r in a.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+      <p style="margin-top:8px"><a href="{% url 'organization:student_profile' student.pk %}">Open full student profile</a> · <a href="{% url 'attendance:student' student.pk %}">Attendance</a></p></div>
+    {% if a.status == 'resolved' %}<div class="card" style="margin-top:16px"><h3>Resolved</h3><p>{{ a.resolution_note }}</p><small class="muted">{{ a.resolved_at|date:"d M Y" }}{% if a.resolved_by %} by {{ a.resolved_by.display_name }}{% endif %}</small></div>
+    {% elif can_manage %}
+    <div class="card" style="margin-top:16px"><h3>Actions</h3>
+      <form method="post" class="inline" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="nuggets"><button class="btn ghost">{% icon "bolt" 18 %} Send remedial nuggets</button></form>
+      <form method="post" style="margin-top:12px">{% csrf_token %}<input type="hidden" name="action" value="notify">
+        <label>Message to parents<textarea class="input" name="message" rows="2" maxlength="300" placeholder="e.g. We have noticed… please contact the class teacher."></textarea></label>
+        <button class="btn ghost" style="margin-top:6px">Notify parents</button></form>
+      <form method="post" style="margin-top:12px">{% csrf_token %}<input type="hidden" name="action" value="resolve">
+        <label>Resolution note<input class="input" name="note" maxlength="300" placeholder="What was done / outcome" required></label>
+        <button class="btn" style="margin-top:6px">{% icon "check" 18 %} Mark resolved</button></form>
+    </div>{% endif %}
+  </div>
+  <div>
+    <div class="card"><h3>Follow-up tasks</h3>
+      <ul class="facts">{% for t in tasks %}<li><span><b>{{ t.title }}</b>{% if t.detail %}<br><small>{{ t.detail }}</small>{% endif %}<br><small>{{ t.assigned_to.display_name|default:"Unassigned" }}{% if t.due_date %} · due {{ t.due_date|date:"d M" }}{% endif %}{% if t.outcome_note %} · {{ t.outcome_note }}{% endif %}</small></span>
+        <b>{% if t.status == 'done' %}Done{% elif can_manage and a.status != 'resolved' %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="task_done"><input type="hidden" name="task" value="{{ t.pk }}"><input name="outcome" class="input" placeholder="Outcome" style="max-width:130px" aria-label="Outcome"> <button class="btn ghost sm">Done</button></form>{% else %}To do{% endif %}</b></li>
+      {% empty %}<li><span>No tasks yet.</span></li>{% endfor %}</ul>
+      {% if can_manage and a.status != 'resolved' %}<form method="post" style="margin-top:12px">{% csrf_token %}<input type="hidden" name="action" value="task">
+        <label>New task<input class="input" name="title" maxlength="160" required placeholder="e.g. Call parents, extra revision class"></label>
+        <label>Details<input class="input" name="detail" maxlength="400"></label>
+        <div class="grid g2"><label>Assign to<select class="select" name="assigned_to"><option value="">Unassigned</option>{% for u in staff %}<option value="{{ u.pk }}">{{ u.display_name }}</option>{% endfor %}</select></label>
+          <label>Due<input class="input" type="date" name="due_date"></label></div>
+        <button class="btn" style="margin-top:6px">{% icon "plus" 18 %} Add task</button></form>{% endif %}
+    </div>
+    <div class="card" style="margin-top:16px"><h3>Attendance (last {{ window }} days)</h3><ul class="facts"><li><span>Attendance</span><b>{% if att.pct is not None %}{{ att.pct }}%{% else %}—{% endif %}</b></li></ul></div>
+    {% if history %}<div class="card" style="margin-top:16px"><h3>Earlier alerts</h3><ul class="facts">{% for h in history %}<li><span>{{ h.created_at|date:"d M Y" }} · {{ h.resolution_note|truncatechars:50 }}</span><b>{{ h.get_level_display }}</b></li>{% endfor %}</ul></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

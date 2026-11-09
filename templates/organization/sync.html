@@ -1,0 +1,79 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Oracle Sync{% endblock %}
+{% block head %}{% if running %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Oracle Sync</h1><p class="muted">Regions, campuses and students are pulled from Oracle automatically.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <form method="post" action="{% url 'organization:sync_test' %}" class="inline">{% csrf_token %}<button class="btn ghost">Test connection</button></form>
+    <form method="post" action="{% url 'organization:sync_now' %}" class="inline">{% csrf_token %}
+      <button class="btn" {% if running %}disabled{% endif %}>{% icon "power" 18 %} {% if running %}Syncing…{% else %}Sync now{% endif %}</button></form>
+  </div>
+</div>
+
+{% if mock %}<div class="msg" style="margin-bottom:18px"><b>Demo mode.</b> Sync uses generated dummy students instead of Oracle. Remove <code>ORACLE_MOCK=1</code> when your real Oracle is ready.</div>{% endif %}
+<div class="grid g2" style="align-items:start">
+  <div class="card">
+    <h2>Connection</h2>
+    {% if configured %}
+      <p><span class="badge student">Configured</span> <code>{{ target }}</code></p>
+      <p class="muted">Credentials are read from environment variables, never stored in the database.</p>
+    {% else %}
+      <p><span class="badge off">Not configured</span></p>
+      <p class="muted">Set these environment variables on the server, then restart:</p>
+      <pre style="background:var(--surface-2);padding:12px;border-radius:var(--radius);overflow:auto">ORACLE_HOST=db.example.com
+ORACLE_PORT=1521
+ORACLE_SERVICE=ORCLPDB1
+ORACLE_USER=readonly_user
+ORACLE_PASSWORD=********</pre>
+      <p class="muted">(or a single <code>ORACLE_DSN=host:1521/service</code>). Use a read-only Oracle user.</p>
+    {% endif %}
+    <p style="margin-bottom:0"><b>{{ counts.regions }}</b> regions · <b>{{ counts.campuses }}</b> campuses · <b>{{ counts.students }}</b> students currently come from Oracle.</p>
+  </div>
+
+  <div class="card">
+    <h2>Automation</h2>
+    <p class="muted">Turn on the switch, then keep this command running on the server (or schedule it with cron / Windows Task Scheduler):</p>
+    <pre style="background:var(--surface-2);padding:12px;border-radius:var(--radius);overflow:auto">python manage.py sync_oracle --loop</pre>
+    <p class="muted" style="margin-bottom:0">Students created by the sync get the default password from <code>STUDENT_DEFAULT_PASSWORD</code>.</p>
+  </div>
+</div>
+
+<form method="post" class="card" style="margin-top:18px">{% csrf_token %}
+  <h2>Sync settings</h2>
+  {{ form.non_field_errors }}
+  <div class="form-grid">
+    {% include "partials/field.html" with field=form.enabled %}
+    {% include "partials/field.html" with field=form.interval_minutes %}
+  </div>
+  {% include "partials/field.html" with field=form.deactivate_missing %}
+  <h3 style="margin-top:8px">Oracle queries</h3>
+  <p class="help" style="margin-bottom:12px">Write one SELECT per list. Keep the column aliases exactly as shown; change table and column names to match your Oracle schema.</p>
+  {% include "partials/field.html" with field=form.sql_regions %}
+  <p class="help" style="margin:-10px 0 14px">Needs: <code>external_id</code>, <code>name</code>, optional <code>code</code></p>
+  {% include "partials/field.html" with field=form.sql_campuses %}
+  <p class="help" style="margin:-10px 0 14px">Needs: <code>external_id</code>, <code>region_id</code>, <code>name</code>, optional <code>code</code></p>
+  {% include "partials/field.html" with field=form.sql_students %}
+  <p class="help" style="margin:-10px 0 14px">Needs: <code>external_id</code>, <code>first_name</code>, <code>campus_id</code>; optional <code>last_name</code>, <code>admission_no</code>, <code>email</code>, <code>phone</code></p>
+  <button class="btn">{% icon "check" 18 %} Save settings</button>
+</form>
+
+<div class="card" style="margin-top:18px">
+  <h2>History</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Started</th><th>How</th><th>Status</th><th>Regions</th><th>Campuses</th><th>Students</th></tr></thead>
+    {% for r in runs %}
+    <tr>
+      <td>{{ r.started_at|date:"d M, H:i" }}{% if r.duration is not None %}<br><small class="muted">{{ r.duration }}s</small>{% endif %}</td>
+      <td>{{ r.get_trigger_display }}</td>
+      <td><span class="badge {% if r.status == 'success' %}student{% elif r.status == 'failed' %}off{% endif %}">{{ r.get_status_display }}</span></td>
+      <td>+{{ r.stats.regions_created|default:0 }} ~{{ r.stats.regions_updated|default:0 }}</td>
+      <td>+{{ r.stats.campuses_created|default:0 }} ~{{ r.stats.campuses_updated|default:0 }}</td>
+      <td>+{{ r.stats.students_created|default:0 }} ~{{ r.stats.students_updated|default:0 }} −{{ r.stats.students_deactivated|default:0 }}</td>
+    </tr>
+    {% if r.errors %}<tr><td colspan="6"><details><summary class="muted">Show messages</summary><pre style="white-space:pre-wrap;margin:8px 0 0">{{ r.errors }}</pre></details></td></tr>{% endif %}
+    {% empty %}<tr><td colspan="6" class="empty">No sync has run yet.</td></tr>{% endfor %}
+  </table></div>
+  <p class="help">+ created · ~ updated · − deactivated</p>
+</div>
+{% endblock %}

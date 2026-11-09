@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Help desk{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{% if user.is_student %}My questions{% else %}Help desk{% endif %}</h1>
+  <p class="muted">{% if user.is_student %}Questions you asked your teachers.{% else %}Questions from students in your courses.{% endif %}</p></div></div>
+<div class="tabs">
+  <a class="{% if not status %}on{% endif %}" href="?">All ({{ total }})</a>
+  <a class="{% if status == 'open' %}on{% endif %}" href="?status=open">Waiting ({{ counts.open }})</a>
+  <a class="{% if status == 'answered' %}on{% endif %}" href="?status=answered">Answered ({{ counts.answered }})</a>
+  <a class="{% if status == 'resolved' %}on{% endif %}" href="?status=resolved">Resolved ({{ counts.resolved }})</a>
+</div>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Question</th>{% if not user.is_student %}<th>Student</th>{% endif %}<th>Course</th><th>Updated</th><th>Status</th></tr></thead>
+  {% for h in items %}
+  <tr><td><a href="{% url 'academics:help_thread' h.pk %}"><b>{{ h.subject }}</b></a>{% if h.lesson %}<br><small class="muted">{{ h.lesson.title }}</small>{% endif %}</td>
+    {% if not user.is_student %}<td>{{ h.student.display_name }}</td>{% endif %}
+    <td>{{ h.course.subject }} · {{ h.course.school_class }}</td><td>{{ h.updated_at|timesince }} ago</td>
+    <td><span class="badge {% if h.status == 'open' %}teacher{% elif h.status == 'answered' %}student{% endif %}">{{ h.get_status_display }}</span></td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">Nothing here.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

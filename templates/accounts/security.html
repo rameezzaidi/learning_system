@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Security{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Account security</h1><p class="muted">Protect your account with a second step and review where you are signed in.</p></div></div>
+<div class="grid g2">
+  <div class="card"><h3>{% icon "shield" 18 %} Two-step sign-in</h3>
+    {% if enabled %}<p><span class="badge student">On</span> {{ backup_left }} backup code{{ backup_left|pluralize }} left.</p>
+      <form method="post" action="{% url 'accounts:twofa_disable' %}">{% csrf_token %}<label>Confirm your password<input class="input" type="password" name="password" required autocomplete="current-password"></label>
+        <button class="btn ghost" style="margin-top:8px">Turn off</button></form>
+    {% else %}<p>Use an authenticator app (Google Authenticator, Microsoft Authenticator, Authy) to generate a code at sign-in.</p>
+      <a class="btn" href="{% url 'accounts:twofa_setup' %}">Set up two-step sign-in</a>{% endif %}
+  </div>
+  <div class="card table-wrap"><h3>{% icon "key" 18 %} Signed-in devices</h3>
+    <table><thead><tr><th>Device</th><th>IP</th><th>Since</th><th></th></tr></thead>
+      {% for s in sessions %}<tr><td>{{ s.user_agent|truncatechars:40|default:"Unknown" }}{% if s.session_key == current %} <span class="badge student">This device</span>{% endif %}</td><td>{{ s.ip|default:"—" }}</td><td>{{ s.created_at|date:"d M H:i" }}</td>
+        <td>{% if s.session_key != current %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="revoke"><input type="hidden" name="id" value="{{ s.pk }}"><button class="btn ghost sm">Sign out</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No sessions recorded.</td></tr>{% endfor %}</table>
+    <form method="post" style="margin-top:8px">{% csrf_token %}<input type="hidden" name="action" value="revoke_others"><button class="btn ghost sm">Sign out all other devices</button></form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+<form method="post" action="{% url 'academics:help_ask' course.pk %}">{% csrf_token %}
+  {% if lesson %}<input type="hidden" name="lesson" value="{{ lesson.pk }}">{% endif %}
+  {% if not lesson %}<input class="input" name="subject" placeholder="Short title (optional)" style="margin-bottom:8px">{% endif %}
+  <textarea class="input" name="body" rows="3" required placeholder="{% if lesson %}What is unclear about “{{ lesson.title|truncatechars:40 }}”?{% else %}What are you stuck on?{% endif %}"></textarea>
+  <button class="btn sm" style="margin-top:8px">Send to teacher</button>
+</form>

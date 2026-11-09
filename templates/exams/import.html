@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Import marks{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Import marks · {{ paper.subject_name }}</h1><p class="muted">{{ paper.exam.name }} · out of {{ paper.total_marks|floatformat:"-2" }}</p></div>
+  <a class="btn ghost" href="{% url 'exams:marks' paper.pk %}">Back</a></div>
+<div class="card" style="max-width:680px">
+  <ol><li>Download the class list: <a href="?template=1">marks template (CSV)</a>.</li>
+    <li>Fill the <b>marks</b> column (use <b>ABS</b> for absent) and save as CSV.</li><li>Upload it here. Nothing is saved if any row has a problem.</li></ol>
+  {% if problems %}<div class="card" style="border-color:var(--danger)"><b>Please fix these and upload again:</b><ul>{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>{% endif %}
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}<input class="input" type="file" name="file" accept=".csv,text/csv" required style="margin-bottom:12px"><button class="btn">Upload &amp; save</button></form>
+</div>
+{% endblock %}

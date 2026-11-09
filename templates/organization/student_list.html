@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Students</h1><p class="muted">{{ page_obj.paginator.count }} student{{ page_obj.paginator.count|pluralize }} found.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if can_export %}<a class="btn ghost" href="{% url 'organization:student_export' %}?{{ qs }}">{% icon "download" 18 %} Export CSV</a>{% endif %}
+    {% if can_create %}<a class="btn" href="{% url 'organization:student_create' %}">{% icon "plus" 18 %} Add student manually</a>{% endif %}
+  </div>
+</div>
+
+<form class="toolbar" method="get">
+  <input class="input" style="max-width:240px" name="q" value="{{ f.q }}" placeholder="Name, username, admission no">
+  <select class="select" style="max-width:180px" name="region">
+    <option value="">All regions</option>
+    {% for r in regions %}<option value="{{ r.pk }}" {% if f.region == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>{% endfor %}
+  </select>
+  <select class="select" style="max-width:200px" name="campus">
+    <option value="">All campuses</option>
+    <option value="none" {% if f.campus == "none" %}selected{% endif %}>— No campus —</option>
+    {% for c in campuses %}<option value="{{ c.pk }}" {% if f.campus == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.region.name }} › {{ c.name }}</option>{% endfor %}
+  </select>
+  <select class="select" style="max-width:140px" name="source">
+    <option value="">Any source</option>
+    <option value="oracle" {% if f.source == "oracle" %}selected{% endif %}>Oracle</option>
+    <option value="manual" {% if f.source == "manual" %}selected{% endif %}>Manual</option>
+  </select>
+  <select class="select" style="max-width:130px" name="status">
+    <option value="">Any status</option>
+    <option value="active" {% if f.status == "active" %}selected{% endif %}>Active</option>
+    <option value="inactive" {% if f.status == "inactive" %}selected{% endif %}>Inactive</option>
+  </select>
+  <button class="btn ghost">Filter</button>
+</form>
+
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>Student</th><th>Admission no</th><th>Region › Campus</th><th>Source</th><th>Status</th><th></th></tr></thead>
+    {% for u in page_obj %}
+    <tr>
+      <td><div class="who">{% avatar u %}<div><a href="{% url 'organization:student_profile' u.pk %}"><b>{{ u.display_name }}</b></a><small>@{{ u.username }}</small></div></div></td>
+      <td>{{ u.student_profile.admission_no|default:"—" }}</td>
+      <td>{% if u.student_profile.campus %}{{ u.student_profile.campus.region.name }} › {{ u.student_profile.campus.name }}{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{% if u.student_profile.is_external %}<span class="badge teacher">Oracle</span>{% else %}<span class="badge">Manual</span>{% endif %}</td>
+      <td>{% if u.is_active %}<span class="badge student">Active</span>{% else %}<span class="badge off">Inactive</span>{% endif %}</td>
+      <td><div class="actions">
+        {% if u.student_profile.is_external %}<small class="muted">Managed by Oracle</small>
+        {% elif can_edit %}<a class="btn ghost sm" href="{% url 'organization:student_edit' u.pk %}">{% icon "edit" 16 %} Edit</a>{% endif %}
+      </div></td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="empty">No students found.</td></tr>{% endfor %}
+  </table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="pager">
+  {% if page_obj.has_previous %}<a class="btn ghost" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.previous_page_number }}">&larr; Previous</a>{% else %}<span></span>{% endif %}
+  <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a class="btn ghost" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page_obj.next_page_number }}">Next &rarr;</a>{% else %}<span></span>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

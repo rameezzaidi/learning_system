@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Campus comparison{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Campus comparison</h1><p class="muted">Averages use published exam results only. “At risk” means the latest published result is below 50%. You only see campuses you are authorised for.</p></div>
+  {% if can_export %}<a class="btn ghost" href="?{% if region %}region={{ region }}&{% endif %}format=csv">{% icon "chart" 18 %} Export CSV</a>{% endif %}
+</div>
+<div class="grid g4 kpis">
+  <div class="kpi" style="--h:var(--primary)"><span class="kpi-ic">{% icon "school" 22 %}</span><b>{{ tot.campuses }}</b><span class="kpi-l">Campuses</span></div>
+  <div class="kpi" style="--h:#10b981"><span class="kpi-ic">{% icon "users" 22 %}</span><b>{{ tot.students }}</b><span class="kpi-l">Students</span><small>{{ tot.teachers }} teacher{{ tot.teachers|pluralize }}</small></div>
+  <div class="kpi" style="--h:#8b5cf6"><span class="kpi-ic">{% icon "chart" 22 %}</span><b>{% if tot.avg_pct is not None %}{{ tot.avg_pct }}%{% else %}—{% endif %}</b><span class="kpi-l">Average exam %</span></div>
+  <div class="kpi" style="--h:#f43f5e"><span class="kpi-ic">{% icon "bell" 22 %}</span><b>{{ tot.at_risk }}</b><span class="kpi-l">Students at risk</span></div>
+</div>
+<form class="toolbar" method="get" style="margin-top:16px">
+  <select class="select" style="max-width:220px" name="region" onchange="this.form.submit()">
+    <option value="">All regions</option>
+    {% for r in regions %}<option value="{{ r.pk }}" {% if region == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>{% endfor %}
+  </select>
+</form>
+{% if chart %}<div class="card"><div class="ch-head"><h2>Ranking</h2></div><div class="chart" data-chart='{{ chart }}'></div></div>{% endif %}
+<div class="card table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Campus</th><th>Region</th><th>Students</th><th>Teachers</th><th>Avg exam %</th><th>Pass rate</th><th>At risk</th><th>Nugget mastery</th></tr></thead>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.rank|default:"—" }}</td>
+      <td><a href="{% url 'organization:student_list' %}?campus={{ r.campus.pk }}"><b>{{ r.campus.name }}</b></a></td>
+      <td>{{ r.region.name }}</td><td>{{ r.students }}</td><td>{{ r.teachers }}</td>
+      <td>{% if r.avg_pct is not None %}<b>{{ r.avg_pct }}%</b>{% else %}<span class="muted">no results</span>{% endif %}</td>
+      <td>{% if r.pass_rate is not None %}{{ r.pass_rate }}%{% else %}—{% endif %}</td>
+      <td>{% if r.at_risk %}<span class="badge off">{{ r.at_risk }}</span>{% else %}0{% endif %}</td>
+      <td>{% if r.mastery is not None %}{{ r.mastery }}% <small class="muted">of {{ r.nuggets }}</small>{% else %}—{% endif %}</td>
+    </tr>
+    {% empty %}<tr><td colspan="9" class="empty">No campuses in your scope yet.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

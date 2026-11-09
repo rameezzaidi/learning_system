@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}My Progress{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>My Progress</h1><p class="muted">{% if cls %}{{ cls }}{% else %}Not in a class yet{% endif %}</p></div></div>
+<div class="card score"><div class="big">{% if overall is None %}—{% else %}{{ overall }}%{% endif %}</div>
+  <div>Overall average · Grade <b>{{ overall_letter }}</b></div></div>
+{% include "assessments/_summary.html" %}
+{% endblock %}

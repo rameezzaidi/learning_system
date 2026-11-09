@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Nugget insights{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class insights</h1><p class="muted">Which nuggets the class finds hard, and who needs help.</p></div>
+  <div class="actions"><a class="btn ghost" href="{% url 'nuggets:manage' %}">{% icon "back" 18 %} Nuggets</a>{% if course %}<a class="btn ghost" href="?course={{ course.pk }}&csv=1">Download CSV</a>{% endif %}</div></div>
+<form method="get" class="toolbar" style="max-width:360px;margin-bottom:14px"><select class="select" name="course" onchange="this.form.submit()">{% for c in courses %}<option value="{{ c.pk }}" {% if c.pk == course.pk %}selected{% endif %}>{{ c.subject.name }} · {{ c.school_class }}</option>{% endfor %}</select></form>
+{% if not course %}<div class="card empty">You have no courses yet.</div>{% else %}
+<div class="grid g2">
+  <div class="card"><h3 style="margin-top:0">Hardest topics first</h3>
+    {% for t in topics %}<div class="ins-row"><div class="grow"><b>{{ t.nugget.title|truncatechars:42 }}</b><small class="muted">{{ t.sent }} sent · {{ t.mastered }} mastered{% if t.struggling %} · <span class="down">{{ t.struggling }} struggling</span>{% endif %}</small>
+      <div class="bar"><i style="width:{% if t.avg is not None %}{{ t.avg }}{% else %}0{% endif %}%;{% if t.avg is not None and t.avg < 60 %}background:#f43f5e{% endif %}"></i></div></div><b class="ins-n">{% if t.avg is not None %}{{ t.avg|floatformat:0 }}%{% else %}—{% endif %}</b></div>
+    {% empty %}<p class="muted">No results yet. Once students take nuggets, the hardest topics appear here.</p>{% endfor %}</div>
+  <div class="card"><h3 style="margin-top:0">How to read this</h3><p class="muted">Each bar is the average quick-check score. Red means below 60% — re-teach that topic in class or send a new nugget. “Struggling” means a student tried two or more times without mastering it.</p></div>
+</div>
+{% if nuggets %}
+<div class="card" style="margin-top:18px"><h3 style="margin-top:0">Student × nugget</h3>
+  <div class="table-wrap"><table class="matrix" data-nopage><thead><tr><th>Student</th>{% for n in nuggets %}<th title="{{ n.title }}">{{ n.topic|truncatechars:14 }}</th>{% endfor %}<th>Mastered</th></tr></thead>
+    <tbody>{% for g in grid %}<tr><td><a href="{% url 'organization:student_profile' g.student.pk %}"><b>{{ g.student.display_name }}</b></a></td>
+      {% for c in g.cells %}<td>{% if c is None %}<span class="muted">·</span>{% elif c.score is None %}<span class="cellp mid">sent</span>{% else %}<span class="cellp {% if c.status == 'done' %}hi{% elif c.score >= 60 %}mid{% elif c.score >= 33 %}lo{% else %}bad{% endif %}">{{ c.score|floatformat:0 }}%</span>{% endif %}</td>{% endfor %}
+      <td><b>{{ g.mastered }}/{{ nuggets|length }}</b></td></tr>{% endfor %}</tbody></table></div></div>
+{% endif %}{% endif %}
+{% endblock %}

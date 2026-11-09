@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Substitutions{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Substitutions · {{ day|date:"D d M Y" }}</h1><p class="muted">Lessons of teachers marked absent or on leave in <a href="{% url 'attendance:staff' %}?date={{ day|date:'Y-m-d' }}">teacher attendance</a>. Only teachers free in that period are offered.</p></div>
+  <form method="get"><input class="input" type="date" name="date" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Date"></form></div>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Period</th><th>Class · Subject</th><th>Absent teacher</th><th>Cover</th></tr></thead>
+  {% for r in rows %}<tr>
+    <td>{{ r.slot.period.name }}<small> {{ r.slot.period.start_time|time:"H:i" }}</small></td><td><b>{{ r.slot.school_class }}</b> · {{ r.slot.course.subject.name }}</td><td>{{ r.slot.course.teacher.display_name }}</td>
+    <td>{% if r.sub %}<b>{{ r.sub.substitute.display_name }}</b>
+      <form method="post" class="inline" style="display:inline">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="slot" value="{{ r.slot.pk }}"><input type="hidden" name="action" value="remove"><button class="btn ghost sm">Remove</button></form>
+      {% else %}<form method="post" style="display:flex;gap:6px;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="slot" value="{{ r.slot.pk }}">
+        <select class="select" name="substitute" style="max-width:200px" aria-label="Substitute teacher"><option value="">Choose teacher…</option>{% for t in r.free %}<option value="{{ t.pk }}">{{ t.display_name }}</option>{% endfor %}</select>
+        <button class="btn sm">Assign</button></form>{% if not r.free %}<small class="muted">No free teacher</small>{% endif %}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No lessons need cover on this date.</td></tr>{% endfor %}</table></div>
+{% endblock %}

@@ -1,0 +1,8 @@
+<section class="gblock {% if lang == 'ur' %}urs{% endif %}" {% if lang == 'ur' %}dir="rtl" lang="ur"{% endif %}>
+  <h3 class="gl">{% if lang == "ur" %}اردو{% else %}English{% endif %}</h3>
+  <p style="margin:6px 0 0">{{ g.summary }}</p>
+  {% if g.key_findings %}<h3>{% if lang == "ur" %}اہم نتائج{% else %}Key findings{% endif %}</h3><ul>{% for s in g.key_findings %}<li>{{ s }}</li>{% endfor %}</ul>{% endif %}
+  {% if g.weak_subjects %}<h3>{% if lang == "ur" %}کمزور مضامین{% else %}Weak subjects{% endif %}</h3><div class="weak">{% for w in g.weak_subjects %}<div class="wk"><b>{{ w.subject }}</b><p>{{ w.issue }}</p><p class="muted">{{ w.advice }}</p></div>{% endfor %}</div>{% endif %}
+  {% if g.teaching_actions %}<h3>{% if lang == "ur" %}تجویز کردہ اقدامات{% else %}Recommended actions{% endif %}</h3><ol>{% for s in g.teaching_actions %}<li>{{ s }}</li>{% endfor %}</ol>{% endif %}
+  {% if g.at_risk_note %}<p class="quote">{{ g.at_risk_note }}</p>{% endif %}
+</section>

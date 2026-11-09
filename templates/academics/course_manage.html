@@ -1,0 +1,65 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}{{ course.subject }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ course.subject }}</h1>
+    <p class="muted">{{ course.school_class }} · {{ course.teacher.display_name|default:"No teacher assigned" }}</p>
+    {% if course.description %}<p>{{ course.description }}</p>{% endif %}</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if user.is_super_admin %}<a class="btn ghost" href="{% url 'academics:class_detail' course.school_class_id %}">Back to class</a>
+    {% else %}<a class="btn ghost" href="{% url 'academics:my_courses' %}">My courses</a>{% endif %}
+    <a class="btn ghost" href="{% url 'academics:help_list' %}?status=open">{% icon "help" 18 %} Help desk{% if open_help %} ({{ open_help }}){% endif %}</a>
+    <a class="btn ghost" href="{% url 'curriculum:outline' course.pk %}">{% icon "book" 18 %} Curriculum</a>
+    <a class="btn ghost" href="{% url 'assessments:gradebook' course.pk %}">{% icon "chart" 18 %} Gradebook</a>
+    <a class="btn ghost" href="{% url 'assessments:create' course.pk %}">{% icon "clipboard" 18 %} New assessment</a>
+    <a class="btn" href="{% url 'academics:module_create' course.pk %}">{% icon "plus" 18 %} Add module</a>
+  </div>
+</div>
+
+<div class="split">
+  <div>
+    {% for m in outline %}
+    <div class="card mod">
+      <div class="mod-head">
+        <span class="mnum">{{ forloop.counter }}</span>
+        <div class="grow"><b>{{ m.module.title }}</b>{% if not m.module.is_published %} <span class="badge">Hidden</span>{% endif %}
+          {% if m.module.description %}<br><small class="muted">{{ m.module.description }}</small>{% endif %}</div>
+        <div class="ctl">
+          <form method="post" action="{% url 'academics:module_move' m.module.pk 'up' %}">{% csrf_token %}<button class="btn ghost sm" {% if forloop.first %}disabled{% endif %} title="Move up">{% icon "up" 14 %}</button></form>
+          <form method="post" action="{% url 'academics:module_move' m.module.pk 'down' %}">{% csrf_token %}<button class="btn ghost sm" {% if forloop.last %}disabled{% endif %} title="Move down">{% icon "down" 14 %}</button></form>
+          <form method="post" action="{% url 'academics:module_toggle' m.module.pk %}">{% csrf_token %}<button class="btn ghost sm">{% if m.module.is_published %}Hide{% else %}Show{% endif %}</button></form>
+          <a class="btn ghost sm" href="{% url 'academics:module_edit' m.module.pk %}">{% icon "edit" 14 %}</a>
+          <form method="post" action="{% url 'academics:module_delete' m.module.pk %}" onsubmit="return confirm('Delete this module and all its items?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+        </div>
+      </div>
+      {% for i in m.items %}
+      <div class="lesson-row">
+        <span class="kind">{% icon i.lesson.kind|kind_icon 16 %}</span>
+        <div class="grow"><a href="{% url 'academics:lesson_view' i.lesson.pk %}">{{ i.lesson.title }}</a><br>
+          <small class="muted">{{ i.lesson.get_kind_display }}{% if not i.lesson.is_published %} · <b>Draft</b>{% endif %}</small></div>
+        <div class="ctl">
+          <form method="post" action="{% url 'academics:lesson_move' i.lesson.pk 'up' %}">{% csrf_token %}<button class="btn ghost sm" {% if forloop.first %}disabled{% endif %}>{% icon "up" 14 %}</button></form>
+          <form method="post" action="{% url 'academics:lesson_move' i.lesson.pk 'down' %}">{% csrf_token %}<button class="btn ghost sm" {% if forloop.last %}disabled{% endif %}>{% icon "down" 14 %}</button></form>
+          <form method="post" action="{% url 'academics:lesson_toggle' i.lesson.pk %}">{% csrf_token %}<button class="btn ghost sm">{% if i.lesson.is_published %}Unpublish{% else %}Publish{% endif %}</button></form>
+          <a class="btn ghost sm" href="{% url 'academics:lesson_edit' i.lesson.pk %}">{% icon "edit" 14 %}</a>
+          <form method="post" action="{% url 'academics:lesson_delete' i.lesson.pk %}" onsubmit="return confirm('Delete this item?')">{% csrf_token %}<button class="btn ghost sm">Delete</button></form>
+        </div>
+      </div>
+      {% empty %}<p class="muted" style="margin:10px 0"><small>No items in this module yet.</small></p>{% endfor %}
+      <a class="btn ghost sm" style="margin-top:10px" href="{% url 'academics:lesson_create' course.pk %}?module={{ m.module.pk }}">{% icon "plus" 14 %} Add item</a>
+    </div>
+    {% empty %}<div class="card empty">No modules yet. Click <b>Add module</b>, then add videos, readings, games and quizzes to it.</div>{% endfor %}
+  </div>
+  <aside>
+    <div class="card"><h3 style="margin-top:0">Student progress</h3>
+      <div class="table-wrap"><table>
+        {% for r in student_rows %}<tr><td><b>{{ r.student.display_name }}</b></td>
+          <td style="width:38%"><div class="bar"><i style="width:{{ r.pct }}%"></i></div></td><td class="muted">{{ r.pct }}%</td></tr>
+        {% empty %}<tr><td class="empty">No students in this class.</td></tr>{% endfor %}
+      </table></div></div>
+    <div class="card"><h3 style="margin-top:0">Assessments</h3>
+      {% for a in assessments %}<div class="lesson-row"><div class="grow"><a href="{% url 'assessments:detail' a.pk %}">{{ a.title }}</a><br><small class="muted">{{ a.get_kind_display }}{% if not a.is_published %} · Draft{% endif %}</small></div></div>
+      {% empty %}<p class="empty">None yet.</p>{% endfor %}</div>
+  </aside>
+</div>
+{% endblock %}

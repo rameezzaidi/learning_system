@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Transport{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Transport</h1></div></div>
+{% for rs in own %}<div class="card" style="margin-bottom:16px"><h3>{{ rs.student.display_name }}: {{ rs.route.name }}</h3><ul class="facts"><li><span>Stop</span><b>{{ rs.stop|default:"—" }}</b></li><li><span>Vehicle</span><b>{{ rs.route.vehicle_no|default:"—" }}</b></li>
+  <li><span>Driver</span><b>{{ rs.route.driver_name|default:"—" }} {{ rs.route.driver_phone }}</b></li></ul></div>{% endfor %}
+{% if not view and not own %}<div class="card empty">No transport route is assigned.</div>{% endif %}
+{% if view %}<div class="grid g2"><div>
+  {% for r in routes %}<div class="card" style="margin-bottom:16px"><h3>{{ r.name }} <small class="muted">{{ r.campus.name|default:"" }}</small></h3>
+    <p class="muted">{{ r.vehicle_no }} · {{ r.driver_name }} {{ r.driver_phone }} · {{ r.riders.count }}/{{ r.capacity }} seats{% if r.monthly_fee %} · fee {{ r.monthly_fee }}{% endif %}</p>
+    <ul class="facts">{% for x in r.riders.all %}<li><span>{{ x.student.display_name }}<small> {{ x.stop }}</small></span>{% if manage %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="unassign"><input type="hidden" name="id" value="{{ x.pk }}"><button class="btn ghost sm">Remove</button></form>{% endif %}</li>{% empty %}<li><span>No riders yet.</span></li>{% endfor %}</ul>
+    {% if manage %}<form method="post" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="assign"><input type="hidden" name="route" value="{{ r.pk }}">
+      <input class="input" name="student" placeholder="Username / admission no." required style="max-width:180px" aria-label="Student"><input class="input" name="stop" placeholder="Stop" style="max-width:140px" aria-label="Stop"><button class="btn sm">Assign</button></form>
+    <form method="post" class="inline" onsubmit="return confirm('Delete this route and its assignments?')" style="margin-top:6px">{% csrf_token %}<input type="hidden" name="action" value="delete_route"><input type="hidden" name="id" value="{{ r.pk }}"><button class="btn ghost sm">Delete route</button></form>{% endif %}</div>
+  {% empty %}<div class="card empty">No routes yet.</div>{% endfor %}</div>
+  {% if manage %}<form method="post" class="card" style="align-self:start">{% csrf_token %}<h3>Add a route</h3><input type="hidden" name="action" value="route">
+    <label>Name<input class="input" name="name" required maxlength="80"></label><label>Campus<select class="select" name="campus"><option value="">—</option>{% for c in campuses %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label>
+    <div class="grid g2"><label>Vehicle no.<input class="input" name="vehicle_no" maxlength="30"></label><label>Capacity<input class="input" type="number" name="capacity" min="1" value="30"></label><label>Driver<input class="input" name="driver_name"></label><label>Driver phone<input class="input" name="driver_phone"></label></div>
+    <label>Monthly fee<input class="input" type="number" name="monthly_fee" min="0" step="0.01" value="0"></label><button class="btn" style="margin-top:8px">Add route</button></form>{% endif %}</div>{% endif %}
+{% endblock %}

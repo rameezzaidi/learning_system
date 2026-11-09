@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load ui %}
+{% block title %}Examinations{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Examinations</h1><p class="muted">Exams, marks entry, results, report cards and AI guidance.</p></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    {% if user.is_super_admin %}<a class="btn ghost" href="{% url 'exams:gradescale' %}">{% icon "chart" 18 %} Grade scale</a>
+    <a class="btn" href="{% url 'exams:create' %}">{% icon "plus" 18 %} New exam</a>{% endif %}</div></div>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Exam</th><th>Class</th><th>Date</th><th>Papers</th><th>Status</th><th></th></tr></thead>
+  {% for e in exams %}
+  <tr><td><b>{{ e.name }}</b></td><td>{{ e.school_class }}</td><td>{{ e.start_date|date:"d M Y"|default:"—" }}</td><td>{{ e.papers.count }}</td>
+    <td>{% if e.is_published %}<span class="badge student">Published</span>{% elif e.marks_locked %}<span class="badge teacher">Locked</span>{% else %}<span class="badge">Marks open</span>{% endif %}</td>
+    <td style="text-align:right"><a class="btn ghost sm" href="{% url 'exams:detail' e.pk %}">Open</a></td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No exams yet.{% if user.is_super_admin %} Create the first one.{% endif %}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}
