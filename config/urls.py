@@ -16,6 +16,7 @@ def healthz(request):
 urlpatterns = [
     path("healthz/", healthz, name="healthz"),
     path("cron/daily/", cron.daily, name="cron_daily"),
+    path("cron/setup/", cron.setup, name="cron_setup"),
     path("notifications/", notif_views.notifications, name="core_notifications"),
     path("notifications/read-all/", notif_views.notifications_read_all, name="core_notifications_read"),
     path("notifications/<int:pk>/", notif_views.notification_open, name="core_notification_open"),

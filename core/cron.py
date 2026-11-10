@@ -28,3 +28,31 @@ def daily(request):
         except Exception as e:  # one failing job must not block the other
             out[name] = f"error: {e.__class__.__name__}"
     return JsonResponse(out)
+
+
+def _authorized(request):
+    secret = getattr(settings, "CRON_SECRET", "")
+    sent = request.headers.get("Authorization", "")
+    return bool(secret) and hmac.compare_digest(sent.encode(), f"Bearer {secret}".encode())
+
+
+def setup(request):
+    """One-off remote setup for hosts with no shell (Vercel): POST /cron/setup/ runs `migrate`;
+    add ?seed=1 to also load the demo data (safe to repeat). Same CRON_SECRET bearer protection."""
+    if request.method != "POST":
+        return JsonResponse({"error": "use POST"}, status=405)
+    if not _authorized(request):
+        return JsonResponse({"error": "forbidden"}, status=403)
+    out = {}
+    steps = [("migrate", {"interactive": False, "verbosity": 0})]
+    if request.GET.get("seed") == "1":
+        steps.append(("seed_demo", {}))
+    for name, kw in steps:
+        buf = io.StringIO()
+        try:
+            call_command(name, stdout=buf, **kw)
+            out[name] = "ok"
+        except Exception as e:
+            out[name] = f"error: {e.__class__.__name__}: {str(e)[:200]}"
+            break
+    return JsonResponse(out)

@@ -253,6 +253,24 @@ class Command(BaseCommand):
                                          covered_by=course.teacher if pos <= 4 else None)
 
     def handle(self, *args, **opts):
+        # Demo accounts share a few passwords: hash each distinct password once (a full PBKDF2 per user made the
+        # seed take ~40 s of CPU). Django re-hashes automatically if the hasher settings change later.
+        from django.contrib.auth.hashers import make_password
+        _hashes = {}
+
+        def _set_password(user, raw):
+            if raw not in _hashes:
+                _hashes[raw] = make_password(raw)
+            user.password = _hashes[raw]
+            user._password = None
+        _orig_set_password = User.set_password
+        User.set_password = _set_password
+        try:
+            return self._handle(*args, **opts)
+        finally:
+            User.set_password = _orig_set_password
+
+    def _handle(self, *args, **opts):
         SchoolSettings.load()
 
         def make(username, first, last, role, password, **extra):
