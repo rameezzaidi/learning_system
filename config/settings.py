@@ -125,6 +125,7 @@ if _db_url.startswith(("postgres://", "postgresql://")):
             "HOST": _u.hostname or "",
             "PORT": str(_u.port or 5432),
             "CONN_MAX_AGE": 0,   # serverless: do not keep connections open between invocations
+            "DISABLE_SERVER_SIDE_CURSORS": True,   # needed behind the Neon pooler (pgbouncer)
             "OPTIONS": {"sslmode": _q.get("sslmode", "require")},
         }
     }
