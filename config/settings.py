@@ -18,7 +18,10 @@ if _env.exists():
 DEBUG = os.environ.get("DEBUG", "0" if os.environ.get("VERCEL") else "1") == "1"
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me-in-production")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "*" if DEBUG else "").split(",") if h.strip()]
-if not DEBUG:
+# Vercel reads settings by running manage.py at build time, before runtime secrets matter: skip the strict
+# checks there. The deployed web function (not manage.py) still enforces them.
+_BUILD_INTROSPECTION = bool(os.environ.get("VERCEL")) and os.path.basename(__import__("sys").argv[0]) == "manage.py"
+if not DEBUG and not _BUILD_INTROSPECTION:
     from django.core.exceptions import ImproperlyConfigured
     if SECRET_KEY.startswith("dev-insecure") or len(SECRET_KEY) < 32:
         raise ImproperlyConfigured("Set a long random SECRET_KEY (32+ characters) when DEBUG=0.")
