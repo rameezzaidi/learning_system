@@ -14,7 +14,8 @@ if _env.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
 
-DEBUG = os.environ.get("DEBUG", "1") == "1"
+# On Vercel the default is production mode (DEBUG off) even if the variable was forgotten.
+DEBUG = os.environ.get("DEBUG", "0" if os.environ.get("VERCEL") else "1") == "1"
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me-in-production")
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "*" if DEBUG else "").split(",") if h.strip()]
 if not DEBUG:
